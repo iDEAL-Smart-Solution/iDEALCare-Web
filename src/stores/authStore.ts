@@ -1,9 +1,12 @@
 import { create } from 'zustand'
 import { authApi } from '../api/authApi'
+import { mockLoginResponse } from '../data/mockAuth'
 import { authStorage } from '../lib/authStorage'
 import type { AuthUser, LoginRequest, TenantMembership } from '../types/auth'
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'
+
+const DEV_BYPASS = import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
 
 interface AuthState {
   status: AuthStatus
@@ -14,7 +17,7 @@ interface AuthState {
   /** Call once on application startup to restore a persisted session. */
   restoreAuth: () => void
 
-  /** Calls the login API, persists the token, and updates state. */
+  /** Calls the login API (or returns mock data in dev bypass mode). */
   login: (credentials: LoginRequest) => Promise<void>
 
   /** Clears all authentication state and persisted storage. */
@@ -28,6 +31,18 @@ export const useAuthStore = create<AuthState>((set) => ({
   tenants: [],
 
   restoreAuth() {
+    // In dev bypass mode, always restore as authenticated so page
+    // refreshes don't land on the login screen.
+    if (DEV_BYPASS) {
+      set({
+        status: 'authenticated',
+        accessToken: mockLoginResponse.accessToken,
+        user: mockLoginResponse.user,
+        tenants: mockLoginResponse.tenants,
+      })
+      return
+    }
+
     const token = authStorage.getToken()
 
     if (!token || authStorage.isTokenExpired()) {
@@ -36,9 +51,6 @@ export const useAuthStore = create<AuthState>((set) => ({
       return
     }
 
-    // Token exists and is not expired — mark as authenticated.
-    // The user object is not persisted to avoid stale PII in localStorage;
-    // a future /me endpoint can re-hydrate it here if needed.
     set({ status: 'authenticated', accessToken: token, user: null, tenants: [] })
   },
 

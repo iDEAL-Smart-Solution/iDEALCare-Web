@@ -1,0 +1,52 @@
+/* ── Subscription blocked banner ────────────────────────────────── */
+/*    Reuses only tokens already defined in index.css.               */
+
+.sub-banner {
+  width: 100%;
+  background: var(--accent-bg);
+  border-bottom: 1px solid var(--accent-border);
+  flex-shrink: 0;
+}
+
+.sub-banner__body {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 24px;
+  flex-wrap: wrap;
+}
+
+.sub-banner__icon {
+  font-size: 15px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sub-banner__text {
+  flex: 1;
+  font-size: 14px;
+  color: var(--text-h);
+  margin: 0;
+  min-width: 0;
+}
+
+.sub-banner__action {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+  text-decoration: none;
+  white-space: nowrap;
+  border: 1px solid var(--accent-border);
+  border-radius: 5px;
+  padding: 4px 12px;
+  transition: background 0.15s;
+}
+
+.sub-banner__action:hover {
+  background: var(--accent-bg);
+}
+
+.sub-banner__action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

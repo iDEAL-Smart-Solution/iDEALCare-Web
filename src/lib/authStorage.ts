@@ -1,11 +1,3 @@
-/**
- * Isolated authentication persistence layer.
- *
- * All reads/writes to storage go through here so the strategy
- * (localStorage today, httpOnly cookie tomorrow) can be swapped
- * in one place without touching the rest of the app.
- */
-
 const ACCESS_TOKEN_KEY = 'idealcare.accessToken'
 const EXPIRES_AT_KEY = 'idealcare.expiresAt'
 

@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
-import { Navigate, Route, Routes } from 'react-router-dom'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import AppLayout from './layouts/AppLayout'
+import { setNavigate } from './lib/navigationRef'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
 import ProtectedRoute from './routes/ProtectedRoute'
@@ -11,6 +12,10 @@ import { useAuthStore } from './stores/authStore'
  *
  * Restores authentication state once on mount, then renders the route tree.
  *
+ * Also wires the router's navigate function into navigationRef so that
+ * apiClient's response interceptor can perform programmatic navigation
+ * without a hard reload (plain modules cannot call useNavigate directly).
+ *
  * Route structure:
  *   /              → redirect to /app/dashboard
  *   /login         → LoginPage (public)
@@ -19,6 +24,11 @@ import { useAuthStore } from './stores/authStore'
  */
 export default function App() {
   const restoreAuth = useAuthStore((s) => s.restoreAuth)
+  const nav = useNavigate()
+
+  useEffect(() => {
+    setNavigate(nav)
+  }, [nav])
 
   useEffect(() => {
     restoreAuth()

@@ -1,4 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
+import SubscriptionBlockedBanner from '../components/SubscriptionBlockedBanner'
 import { useAuthStore } from '../stores/authStore'
 import './AppLayout.css'
 
@@ -99,6 +100,8 @@ export default function AppLayout() {
             )}
           </div>
         </header>
+
+        <SubscriptionBlockedBanner />
 
         <main className="app-main" id="main-content" tabIndex={-1}>
           <Outlet />
