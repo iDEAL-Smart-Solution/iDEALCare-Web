@@ -1,4 +1,23 @@
-# React + TypeScript + Vite
+# iDEAL Care Frontend
+
+## Architecture
+
+This frontend uses a layer-based structure that matches the existing application: DTOs and contract types live in `src/types`, backend services in `src/api`, shared infrastructure in `src/lib`, Zustand state in `src/stores`, route guards in `src/routes`, and screens in `src/pages`. This keeps authentication and tenant context in one place without reorganizing unrelated feature modules.
+
+Authentication uses the single Axios client in `src/lib/apiClient.ts`. The API base URL is configured with `VITE_API_BASE_URL`; copy `.env.example` to `.env.local` for local values. Login sends the current hostname as `domain`, with `VITE_DEV_TENANT_DOMAIN` available only in Vite development mode.
+
+The app follows the backend's one-tenant contract. Runtime context is represented by `tenant.tenant_id` and `tenant.tenant_role`, preserving the exact JWT claim names. The client uses these values for display and UX only; authorization remains server-enforced. Only the access token and expiry are persisted through `authStorage`.
+
+`ProtectedRoute` keeps protected content out of the render tree while auth is initializing or loading, redirects unauthenticated users to `/login`, and preserves the attempted location in router state. The Axios response interceptor centrally handles non-login 401 responses by clearing auth and navigating to login; 403 responses pass through unchanged.
+
+## Commands
+
+```bash
+npm run dev
+npm test
+npm run lint
+npm run build
+```
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 

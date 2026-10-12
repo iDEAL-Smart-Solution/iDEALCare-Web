@@ -1,0 +1,50 @@
+[1mdiff --git a/src/test/ProtectedRoute.test.tsx b/src/test/ProtectedRoute.test.tsx[m
+[1mindex e591159..88717d1 100644[m
+[1m--- a/src/test/ProtectedRoute.test.tsx[m
+[1m+++ b/src/test/ProtectedRoute.test.tsx[m
+[36m@@ -8,7 +8,7 @@[m [mbeforeEach(() => {[m
+   localStorage.clear()[m
+ })[m
+ [m
+[31m-function renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle') {[m
+[32m+[m[32mfunction renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle' | 'loading') {[m
+   useAuthStore.setState({[m
+     status: authStatus,[m
+     user:[m
+[36m@@ -16,7 +16,7 @@[m [mfunction renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle'[m
+         ? { id: '1', firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' }[m
+         : null,[m
+     accessToken: authStatus === 'authenticated' ? 'test-token' : null,[m
+[31m-    tenants: [],[m
+[32m+[m[32m    tenant: null,[m
+   })[m
+ [m
+   return render([m
+[36m@@ -37,8 +37,8 @@[m [mdescribe('ProtectedRoute', () => {[m
+   it('redirects unauthenticated users to /login', () => {[m
+     renderWithAuth('unauthenticated')[m
+ [m
+[31m-    expect(screen.getByText('Login Page')).toBeInTheDocument()[m
+[31m-    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()[m
+[32m+[m[32m    expect(screen.getByText('Login Page')).toBeTruthy()[m
+[32m+[m[32m    expect(screen.queryByText('Dashboard')).toBeNull()[m
+   })[m
+ [m
+   // ── 6. Authenticated users can access /app/dashboard ───────────────────────[m
+[36m@@ -46,7 +46,14 @@[m [mdescribe('ProtectedRoute', () => {[m
+   it('allows authenticated users to access /app/dashboard', () => {[m
+     renderWithAuth('authenticated')[m
+ [m
+[31m-    expect(screen.getByText('Dashboard')).toBeInTheDocument()[m
+[31m-    expect(screen.queryByText('Login Page')).not.toBeInTheDocument()[m
+[32m+[m[32m    expect(screen.getByText('Dashboard')).toBeTruthy()[m
+[32m+[m[32m    expect(screen.queryByText('Login Page')).toBeNull()[m
+[32m+[m[32m  })[m
+[32m+[m
+[32m+[m[32m  it('does not render protected content while auth is loading', () => {[m
+[32m+[m[32m    renderWithAuth('loading')[m
+[32m+[m
+[32m+[m[32m    expect(screen.queryByText('Dashboard')).toBeNull()[m
+[32m+[m[32m    expect(screen.queryByText('Login Page')).toBeNull()[m
+   })[m
+ })[m

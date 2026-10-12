@@ -5,10 +5,11 @@ export interface AuthUser {
   email: string
 }
 
-export interface TenantMembership {
-  tenantId: string
-  tenantName: string
-  role: string
+/** JWT claim names are intentionally kept verbatim at this boundary. */
+export interface TenantContext {
+  tenant_id: string
+  tenant_role: string
+  tenantName?: string
 }
 
 export interface LoginRequest {
@@ -20,5 +21,5 @@ export interface LoginResponse {
   accessToken: string
   expiresAt: string
   user: AuthUser
-  tenants: TenantMembership[]
+  tenant: TenantContext
 }

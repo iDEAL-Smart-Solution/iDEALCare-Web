@@ -20,9 +20,11 @@ const mockLoginResponse: LoginResponse = {
     lastName: 'Doe',
     email: 'jane@example.com',
   },
-  tenants: [
-    { tenantId: 'tenant-1', tenantName: 'Acme Clinic', role: 'Owner' },
-  ],
+  tenant: {
+    tenant_id: 'tenant-1',
+    tenant_role: 'Owner',
+    tenantName: 'Acme Clinic',
+  },
 }
 
 beforeEach(() => {
@@ -31,7 +33,7 @@ beforeEach(() => {
     status: 'unauthenticated',
     user: null,
     accessToken: null,
-    tenants: [],
+    tenant: null,
   })
   vi.clearAllMocks()
 })
@@ -47,15 +49,20 @@ describe('authStore – logout', () => {
     // Confirm we are authenticated first
     expect(useAuthStore.getState().status).toBe('authenticated')
     expect(localStorage.getItem('idealcare.accessToken')).not.toBeNull()
+    expect(useAuthStore.getState().tenant).toEqual({
+      tenant_id: 'tenant-1',
+      tenant_role: 'Owner',
+      tenantName: 'Acme Clinic',
+    })
 
     // Now logout
     useAuthStore.getState().logout()
 
-    const { status, user, accessToken, tenants } = useAuthStore.getState()
+    const { status, user, accessToken, tenant } = useAuthStore.getState()
     expect(status).toBe('unauthenticated')
     expect(user).toBeNull()
     expect(accessToken).toBeNull()
-    expect(tenants).toHaveLength(0)
+    expect(tenant).toBeNull()
     expect(localStorage.getItem('idealcare.accessToken')).toBeNull()
   })
 })

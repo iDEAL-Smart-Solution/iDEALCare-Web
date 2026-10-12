@@ -52,7 +52,7 @@ beforeEach(() => {
     status: 'authenticated',
     user: { id: '1', firstName: 'Dev', lastName: 'User', email: 'dev@test.com' },
     accessToken: 'live-token',
-    tenants: [],
+    tenant: null,
   })
   // Reset subscription store
   useSubscriptionStore.setState({ blockState: null })
@@ -72,6 +72,10 @@ afterEach(() => {
 // ── 1. Request interceptor — Bearer token ────────────────────────────────────
 
 describe('apiClient request interceptor', () => {
+  it('uses the Vite API base URL configuration', () => {
+    expect(apiClient.defaults.baseURL).toBe('')
+  })
+
   it('attaches Authorization header when a token is stored', () => {
     authStorage.saveToken('my-test-token', new Date(Date.now() + 3600 * 1000).toISOString())
 

@@ -14,15 +14,23 @@ import type { LoginRequest, LoginResponse } from '../types/auth'
  */
 const DEV_BYPASS = import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
 
+function getTenantDomain(): string {
+  if (import.meta.env.DEV && import.meta.env.VITE_DEV_TENANT_DOMAIN) {
+    return import.meta.env.VITE_DEV_TENANT_DOMAIN
+  }
+
+  return window.location.hostname
+}
+
 export const authApi = {
-  async login(_credentials: LoginRequest): Promise<LoginResponse> {
+  async login(credentials: LoginRequest): Promise<LoginResponse> {
     if (DEV_BYPASS) {
       return mockLoginResponse
     }
 
     const response = await apiClient.post<LoginResponse>(
       '/api/auth/login',
-      _credentials,
+      { ...credentials, domain: getTenantDomain() },
     )
     return response.data
   },

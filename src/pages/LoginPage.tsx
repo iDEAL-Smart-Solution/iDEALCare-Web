@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import './LoginPage.css'
 
@@ -14,6 +14,7 @@ export default function LoginPage() {
   const login = useAuthStore((s) => s.login)
   const status = useAuthStore((s) => s.status)
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -49,7 +50,13 @@ export default function LoginPage() {
 
     try {
       await login({ email: email.trim(), password })
-      navigate('/app/dashboard', { replace: true })
+      const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
+      navigate(
+        from
+          ? `${from.pathname ?? '/app/dashboard'}${from.search ?? ''}${from.hash ?? ''}`
+          : '/app/dashboard',
+        { replace: true },
+      )
     } catch {
       setSubmitError('Invalid email or password. Please try again.')
     }
