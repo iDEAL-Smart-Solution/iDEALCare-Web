@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { authApi } from '../api/authApi'
 import { mockLoginResponse } from '../data/mockAuth'
 import { authStorage } from '../lib/authStorage'
-import type { AuthUser, LoginRequest, TenantMembership } from '../types/auth'
+import type { AuthUser, LoginRequest, TenantContext } from '../types/auth'
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'
 
@@ -12,7 +12,7 @@ interface AuthState {
   status: AuthStatus
   user: AuthUser | null
   accessToken: string | null
-  tenants: TenantMembership[]
+  tenant: TenantContext | null
 
   /** Call once on application startup to restore a persisted session. */
   restoreAuth: () => void
@@ -28,7 +28,7 @@ export const useAuthStore = create<AuthState>((set) => ({
   status: 'idle',
   user: null,
   accessToken: null,
-  tenants: [],
+  tenant: null,
 
   restoreAuth() {
     // In dev bypass mode, always restore as authenticated so page
@@ -38,7 +38,7 @@ export const useAuthStore = create<AuthState>((set) => ({
         status: 'authenticated',
         accessToken: mockLoginResponse.accessToken,
         user: mockLoginResponse.user,
-        tenants: mockLoginResponse.tenants,
+        tenant: mockLoginResponse.tenant,
       })
       return
     }
@@ -47,26 +47,31 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     if (!token || authStorage.isTokenExpired()) {
       authStorage.clear()
-      set({ status: 'unauthenticated', user: null, accessToken: null, tenants: [] })
+      set({ status: 'unauthenticated', user: null, accessToken: null, tenant: null })
       return
     }
 
-    set({ status: 'authenticated', accessToken: token, user: null, tenants: [] })
+    set({ status: 'authenticated', accessToken: token, user: null, tenant: null })
   },
 
   async login(credentials: LoginRequest) {
     set({ status: 'loading' })
 
-    const response = await authApi.login(credentials)
+    try {
+      const response = await authApi.login(credentials)
 
-    authStorage.saveToken(response.accessToken, response.expiresAt)
+      authStorage.saveToken(response.accessToken, response.expiresAt)
 
-    set({
-      status: 'authenticated',
-      accessToken: response.accessToken,
-      user: response.user,
-      tenants: response.tenants,
-    })
+      set({
+        status: 'authenticated',
+        accessToken: response.accessToken,
+        user: response.user,
+        tenant: response.tenant,
+      })
+    } catch (error) {
+      set({ status: 'unauthenticated' })
+      throw error
+    }
   },
 
   logout() {
@@ -75,7 +80,7 @@ export const useAuthStore = create<AuthState>((set) => ({
       status: 'unauthenticated',
       user: null,
       accessToken: null,
-      tenants: [],
+      tenant: null,
     })
   },
 }))

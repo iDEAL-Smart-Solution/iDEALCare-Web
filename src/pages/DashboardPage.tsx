@@ -7,7 +7,7 @@ import './DashboardPage.css'
  */
 export default function DashboardPage() {
   const user = useAuthStore((s) => s.user)
-  const tenants = useAuthStore((s) => s.tenants)
+  const tenant = useAuthStore((s) => s.tenant)
 
   return (
     <div className="dashboard">
@@ -18,16 +18,14 @@ export default function DashboardPage() {
         The application shell is ready. Feature development can begin.
       </p>
 
-      {tenants.length > 0 && (
+      {tenant && (
         <div className="dashboard__tenants">
-          <h3 className="dashboard__tenants-title">Your organisations</h3>
+          <h3 className="dashboard__tenants-title">Your organisation</h3>
           <ul className="dashboard__tenants-list">
-            {tenants.map((t) => (
-              <li key={t.tenantId} className="dashboard__tenant-item">
-                <span className="dashboard__tenant-name">{t.tenantName}</span>
-                <span className="dashboard__tenant-role">{t.role}</span>
-              </li>
-            ))}
+            <li className="dashboard__tenant-item">
+              <span className="dashboard__tenant-name">{tenant.tenantName ?? tenant.tenant_id}</span>
+              <span className="dashboard__tenant-role">{tenant.tenant_role}</span>
+            </li>
           </ul>
         </div>
       )}

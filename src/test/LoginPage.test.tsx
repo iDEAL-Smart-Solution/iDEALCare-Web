@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { useAuthStore } from '../stores/authStore'
-import type { LoginRequest } from '../types/auth'
 import LoginPage from '../pages/LoginPage'
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -23,7 +22,7 @@ beforeEach(() => {
     status: 'unauthenticated',
     user: null,
     accessToken: null,
-    tenants: [],
+    tenant: null,
   })
 })
 
@@ -73,7 +72,7 @@ describe('LoginPage validation', () => {
 
 describe('Successful login', () => {
   it('stores authentication state after a successful login', async () => {
-    const mockLogin = vi.fn(async (_credentials: LoginRequest) => {
+    const mockLogin = vi.fn(async () => {
       useAuthStore.setState({
         status: 'authenticated',
         accessToken: 'test-token',
@@ -83,7 +82,7 @@ describe('Successful login', () => {
           lastName: 'Doe',
           email: 'jane@example.com',
         },
-        tenants: [],
+        tenant: null,
       })
     })
 
@@ -107,7 +106,7 @@ describe('Successful login', () => {
 
 describe('Failed login', () => {
   it('displays a generic error message when login fails', async () => {
-    const mockLogin = vi.fn(async (_credentials: LoginRequest) => {
+    const mockLogin = vi.fn(async () => {
       throw new Error('401 Unauthorized')
     })
 

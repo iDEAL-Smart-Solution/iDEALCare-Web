@@ -8,7 +8,7 @@ beforeEach(() => {
   localStorage.clear()
 })
 
-function renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle') {
+function renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle' | 'loading') {
   useAuthStore.setState({
     status: authStatus,
     user:
@@ -16,7 +16,7 @@ function renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle'
         ? { id: '1', firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' }
         : null,
     accessToken: authStatus === 'authenticated' ? 'test-token' : null,
-    tenants: [],
+    tenant: null,
   })
 
   return render(
@@ -37,8 +37,8 @@ describe('ProtectedRoute', () => {
   it('redirects unauthenticated users to /login', () => {
     renderWithAuth('unauthenticated')
 
-    expect(screen.getByText('Login Page')).toBeInTheDocument()
-    expect(screen.queryByText('Dashboard')).not.toBeInTheDocument()
+    expect(screen.getByText('Login Page')).toBeTruthy()
+    expect(screen.queryByText('Dashboard')).toBeNull()
   })
 
   // ── 6. Authenticated users can access /app/dashboard ───────────────────────
@@ -46,7 +46,14 @@ describe('ProtectedRoute', () => {
   it('allows authenticated users to access /app/dashboard', () => {
     renderWithAuth('authenticated')
 
-    expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.queryByText('Login Page')).not.toBeInTheDocument()
+    expect(screen.getByText('Dashboard')).toBeTruthy()
+    expect(screen.queryByText('Login Page')).toBeNull()
+  })
+
+  it('does not render protected content while auth is loading', () => {
+    renderWithAuth('loading')
+
+    expect(screen.queryByText('Dashboard')).toBeNull()
+    expect(screen.queryByText('Login Page')).toBeNull()
   })
 })

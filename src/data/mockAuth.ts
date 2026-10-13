@@ -15,16 +15,9 @@ export const mockLoginResponse: LoginResponse = {
     lastName: 'User',
     email: 'dev@idealcare.local',
   },
-  tenants: [
-    {
-      tenantId: 'tenant-dev-1',
-      tenantName: 'Demo Clinic',
-      role: 'Owner',
-    },
-    {
-      tenantId: 'tenant-dev-2',
-      tenantName: 'Satellite Practice',
-      role: 'Clinician',
-    },
-  ],
+  tenant: {
+    tenant_id: 'tenant-dev-1',
+    tenant_role: 'Owner',
+    tenantName: 'Demo Clinic',
+  },
 }

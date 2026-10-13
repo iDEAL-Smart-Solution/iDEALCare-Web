@@ -1,4 +1,4 @@
-import { Navigate, Outlet } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 
 /**
@@ -11,14 +11,15 @@ import { useAuthStore } from '../stores/authStore'
  */
 export default function ProtectedRoute() {
   const status = useAuthStore((s) => s.status)
+  const location = useLocation()
 
-  if (status === 'idle') {
+  if (status === 'idle' || status === 'loading') {
     // Auth restoration hasn't run yet — avoid a premature redirect.
     return null
   }
 
   if (status === 'unauthenticated') {
-    return <Navigate to="/login" replace />
+    return <Navigate to="/login" state={{ from: location }} replace />
   }
 
   // 'loading' and 'authenticated' both pass through; the loading spinner
