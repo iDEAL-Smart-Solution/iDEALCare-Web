@@ -49,12 +49,14 @@ export default function AppLayout() {
                 Dashboard
               </NavLink>
             </li>
-            {/* Placeholder entries — feature teams replace these */}
             <li>
-              <span className="nav-link nav-link--placeholder">
+              <NavLink
+                to="/app/patients"
+                className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}
+              >
                 <span className="nav-link__icon" aria-hidden="true">○</span>
                 Patients
-              </span>
+              </NavLink>
             </li>
             <li>
               <span className="nav-link nav-link--placeholder">

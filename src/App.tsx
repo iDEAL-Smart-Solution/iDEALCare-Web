@@ -4,6 +4,7 @@ import AppLayout from './layouts/AppLayout'
 import { setNavigate } from './lib/navigationRef'
 import DashboardPage from './pages/DashboardPage'
 import LoginPage from './pages/LoginPage'
+import PatientsPage, { PatientCreatePage, PatientDetailPage } from './pages/PatientsPage'
 import ProtectedRoute from './routes/ProtectedRoute'
 import { useAuthStore } from './stores/authStore'
 
@@ -43,6 +44,9 @@ export default function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/app/dashboard" element={<DashboardPage />} />
+          <Route path="/app/patients" element={<PatientsPage />} />
+          <Route path="/app/patients/new" element={<PatientCreatePage />} />
+          <Route path="/app/patients/:patientId" element={<PatientDetailPage />} />
           {/* /app → redirect to dashboard */}
           <Route path="/app" element={<Navigate to="/app/dashboard" replace />} />
         </Route>
