@@ -14,6 +14,7 @@ import './AppLayout.css'
  */
 export default function AppLayout() {
   const user = useAuthStore((s) => s.user)
+  const tenant = useAuthStore((s) => s.tenant)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
 
@@ -48,12 +49,14 @@ export default function AppLayout() {
                 Dashboard
               </NavLink>
             </li>
-            {/* Placeholder entries — feature teams replace these */}
             <li>
-              <span className="nav-link nav-link--placeholder">
+              <NavLink
+                to="/app/patients"
+                className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}
+              >
                 <span className="nav-link__icon" aria-hidden="true">○</span>
                 Patients
-              </span>
+              </NavLink>
             </li>
             <li>
               <span className="nav-link nav-link--placeholder">
@@ -93,10 +96,16 @@ export default function AppLayout() {
         <header className="app-header" role="banner">
           <h1 className="app-header__title">iDEAL Care</h1>
           <div className="app-header__user">
-            {user && (
+            {tenant ? (
+              <span>
+                {tenant.tenantName ?? tenant.tenant_id} · {tenant.tenant_role}
+              </span>
+            ) : user ? (
               <span>
                 {user.firstName} {user.lastName}
               </span>
+            ) : (
+              <span>Account</span>
             )}
           </div>
         </header>

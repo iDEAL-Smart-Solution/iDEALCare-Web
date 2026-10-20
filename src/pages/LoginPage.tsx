@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import './LoginPage.css'
 
@@ -16,12 +16,23 @@ export default function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
+  const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
+  const redirectTarget = from ? `${from.pathname ?? '/app/dashboard'}${from.search ?? ''}${from.hash ?? ''}` : '/app/dashboard'
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const isLoading = status === 'loading'
+
+  if (status === 'idle') {
+    return null
+  }
+
+  if (status === 'authenticated') {
+    return <Navigate to={redirectTarget} replace />
+  }
 
   function validate(): boolean {
     const errors: { email?: string; password?: string } = {}
@@ -50,13 +61,7 @@ export default function LoginPage() {
 
     try {
       await login({ email: email.trim(), password })
-      const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
-      navigate(
-        from
-          ? `${from.pathname ?? '/app/dashboard'}${from.search ?? ''}${from.hash ?? ''}`
-          : '/app/dashboard',
-        { replace: true },
-      )
+      navigate(redirectTarget, { replace: true })
     } catch {
       setSubmitError('Invalid email or password. Please try again.')
     }

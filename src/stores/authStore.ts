@@ -51,11 +51,16 @@ export const useAuthStore = create<AuthState>((set) => ({
       return
     }
 
-    set({ status: 'authenticated', accessToken: token, user: null, tenant: null })
+    // The app only persists the access token and expiry. There is no
+    // documented session-restoration API that rehydrates user/tenant state,
+    // so a valid token alone must not be treated as a full authenticated
+    // session for the UI.
+    authStorage.clear()
+    set({ status: 'unauthenticated', user: null, accessToken: null, tenant: null })
   },
 
   async login(credentials: LoginRequest) {
-    set({ status: 'loading' })
+    set({ status: 'loading', user: null, accessToken: null, tenant: null })
 
     try {
       const response = await authApi.login(credentials)
@@ -69,7 +74,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         tenant: response.tenant,
       })
     } catch (error) {
-      set({ status: 'unauthenticated' })
+      authStorage.clear()
+      set({ status: 'unauthenticated', user: null, accessToken: null, tenant: null })
       throw error
     }
   },

@@ -38,6 +38,22 @@ beforeEach(() => {
   vi.clearAllMocks()
 })
 
+describe('authStore – restoreAuth', () => {
+  it('does not mark the app authenticated when only a token exists without restored user or tenant data', () => {
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
+    localStorage.setItem('idealcare.accessToken', 'persisted-token')
+    localStorage.setItem('idealcare.expiresAt', expiresAt)
+
+    useAuthStore.getState().restoreAuth()
+
+    expect(useAuthStore.getState().status).toBe('unauthenticated')
+    expect(useAuthStore.getState().user).toBeNull()
+    expect(useAuthStore.getState().tenant).toBeNull()
+    expect(localStorage.getItem('idealcare.accessToken')).toBeNull()
+    expect(localStorage.getItem('idealcare.expiresAt')).toBeNull()
+  })
+})
+
 // ── 7. Logout clears authentication state ────────────────────────────────────
 
 describe('authStore – logout', () => {

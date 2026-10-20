@@ -1,9 +1,16 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { authApi } from '../api/authApi'
 import { useAuthStore } from '../stores/authStore'
 import LoginPage from '../pages/LoginPage'
+
+vi.mock('../api/authApi', () => ({
+  authApi: {
+    login: vi.fn(),
+  },
+}))
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -18,7 +25,10 @@ function renderLoginPage(initialPath = '/login') {
 /** Reset Zustand store and localStorage between tests. */
 beforeEach(() => {
   localStorage.clear()
+  vi.clearAllMocks()
+  const initialState = useAuthStore.getInitialState()
   useAuthStore.setState({
+    ...initialState,
     status: 'unauthenticated',
     user: null,
     accessToken: null,
@@ -121,5 +131,55 @@ describe('Failed login', () => {
     expect(
       await screen.findByText(/invalid email or password/i),
     ).toBeInTheDocument()
+  })
+
+  it('clears stale authentication state when login fails', async () => {
+    vi.mocked(authApi.login).mockRejectedValueOnce(new Error('401 Unauthorized'))
+
+    useAuthStore.setState({
+      status: 'unauthenticated',
+      user: { id: '1', firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' },
+      accessToken: 'stale-token',
+      tenant: { tenant_id: 'tenant-1', tenant_role: 'Owner', tenantName: 'Acme Clinic' },
+    })
+
+    renderLoginPage()
+
+    await userEvent.type(screen.getByLabelText(/email/i), 'jane@example.com')
+    await userEvent.type(screen.getByLabelText(/password/i), 'password123')
+    await userEvent.click(screen.getByRole('button', { name: /sign in/i }))
+
+    await waitFor(() => {
+      const state = useAuthStore.getState()
+      expect(state.status).toBe('unauthenticated')
+      expect(state.user).toBeNull()
+      expect(state.accessToken).toBeNull()
+      expect(state.tenant).toBeNull()
+    })
+  })
+})
+
+describe('LoginPage auth redirect', () => {
+  it('redirects authenticated users away from the login page', async () => {
+    useAuthStore.setState({
+      status: 'authenticated',
+      user: { id: '1', firstName: 'Jane', lastName: 'Doe', email: 'jane@example.com' },
+      accessToken: 'test-token',
+      tenant: { tenant_id: 'tenant-1', tenant_role: 'Owner', tenantName: 'Acme Clinic' },
+    })
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/app/dashboard" element={<div>Dashboard</div>} />
+        </Routes>
+      </MemoryRouter>,
+    )
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText(/email/i)).not.toBeInTheDocument()
+      expect(screen.getByText('Dashboard')).toBeInTheDocument()
+    })
   })
 })
