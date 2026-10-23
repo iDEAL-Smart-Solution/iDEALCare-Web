@@ -47,6 +47,7 @@ function makeAxios401(url: string) {
 
 beforeEach(() => {
   localStorage.clear()
+  sessionStorage.clear()
   // Reset store to a known authenticated state for 401 tests
   useAuthStore.setState({
     status: 'authenticated',
@@ -106,7 +107,7 @@ describe('apiClient response interceptor — 401', () => {
 
     expect(useAuthStore.getState().user).toBeNull()
     expect(useAuthStore.getState().accessToken).toBeNull()
-    expect(localStorage.getItem('idealcare.accessToken')).toBeNull()
+    expect(sessionStorage.getItem('idealcare.accessToken')).toBeNull()
     expect(navigationRef.navigate).toHaveBeenCalledWith('/login')
   })
 

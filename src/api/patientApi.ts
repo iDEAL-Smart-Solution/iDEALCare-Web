@@ -6,6 +6,11 @@ import type {
   PatientSummaryDto,
   PagedResult,
   RegisterPatientAccountRequest,
+  RegistrationInvoiceDto,
+  MedicalItemDto,
+  PatientAppointmentDto,
+  PatientCareRecordDto,
+  ReviewPatientRegistrationRequest,
   UpdatePatientRequest,
   UpdatePatientStatusRequest,
 } from '../types/patient'
@@ -64,6 +69,21 @@ export const patientApi = {
     return response.data
   },
 
+  async listStaffAssignments(patientId: string) {
+    const response = await apiClient.get<{ id: string; patientId: string; staffUserId: string; staffFirstName: string; staffLastName: string; assignedAt: string }[]>(
+      `/api/patients/${patientId}/staff-assignments`,
+    )
+    return response.data
+  },
+
+  async assignStaff(patientId: string, staffUserId: string) {
+    await apiClient.post(`/api/patients/${patientId}/staff-assignments`, { staffUserId })
+  },
+
+  async unassignStaff(patientId: string, staffUserId: string) {
+    await apiClient.delete(`/api/patients/${patientId}/staff-assignments/${staffUserId}`)
+  },
+
   async assignGuardian(patientId: string, request: GrantGuardianAccessRequest) {
     const response = await apiClient.post<GuardianAccessDto>(
       `/api/patients/${patientId}/guardians`,
@@ -89,7 +109,78 @@ export const patientApi = {
   },
 
   async listAccessiblePatients(guardianId: string) {
-    const response = await apiClient.get<GuardianPatientDto[]>(`/api/guardians/${guardianId}/patients`)
+    const response = await apiClient.get<GuardianPatientDto[]>(`/api/patients/by-guardian/${guardianId}`)
+    return response.data
+  },
+
+  async getMe() {
+    const response = await apiClient.get<PatientDto>('/api/patients/me')
+    return response.data
+  },
+
+  async resubmitRegistration() {
+    const response = await apiClient.post<PatientDto>('/api/patients/me/resubmit')
+    return response.data
+  },
+
+  async admit(patientId: string) {
+    const response = await apiClient.post<{ admissionId: string }>(`/api/patients/${patientId}/admit`)
+    return response.data
+  },
+
+  async listPendingReview() {
+    const response = await apiClient.get<PatientSummaryDto[]>('/api/patients/pending-review')
+    return response.data
+  },
+
+  async listAwaitingAdmission() {
+    const response = await apiClient.get<PatientSummaryDto[]>('/api/patients/awaiting-admission')
+    return response.data
+  },
+
+  async reviewRegistration(patientId: string, request: ReviewPatientRegistrationRequest) {
+    const response = await apiClient.post<PatientDto>(`/api/patients/${patientId}/review`, request)
+    return response.data
+  },
+
+  async getInvoices(patientId: string) {
+    const response = await apiClient.get<RegistrationInvoiceDto[]>(`/api/billing/patients/${patientId}/invoices`)
+    return response.data
+  },
+
+  async getMedicalItems(patientId: string) {
+    const response = await apiClient.get<MedicalItemDto[]>(`/api/billing/patients/${patientId}/medical-items`)
+    return response.data
+  },
+
+  async payMedicalItem(patientId: string, itemId: string, amount: number, callbackUrl?: string) {
+    const response = await apiClient.post<{ paymentId: string; reference: string; authorizationUrl: string }>(
+      `/api/billing/patients/${patientId}/medical-items/${itemId}/payments`,
+      { medicalItemId: itemId, amount, callbackUrl },
+    )
+    return response.data
+  },
+
+  async getAppointments(patientId: string) {
+    const response = await apiClient.get<PatientAppointmentDto[]>(`/api/scheduling/appointments/patients/${patientId}`)
+    return response.data
+  },
+
+  async getCareRecords(patientId: string) {
+    const response = await apiClient.get<PatientCareRecordDto[]>(`/api/care-records/patients/${patientId}`)
+    return response.data
+  },
+
+  async payInvoice(patientId: string, invoiceId: string, amount: number, callbackUrl?: string) {
+    const response = await apiClient.post<{ paymentId: string; reference: string; authorizationUrl: string }>(
+      `/api/billing/patients/${patientId}/invoices/${invoiceId}/payments`,
+      { invoiceId, amount, callbackUrl }
+    )
+    return response.data
+  },
+
+  async verifyPayment(reference: string) {
+    const response = await apiClient.post<{ status: number; reference: string }>(`/api/payments/verify/${reference}`)
     return response.data
   },
 }

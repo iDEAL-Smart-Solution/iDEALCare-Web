@@ -1,6 +1,6 @@
 import { useSubscriptionStore } from '../stores/subscriptionStore'
 import type { SubscriptionBlockReason } from '../types/subscription'
-import './SubscriptionBlockedBanner.css'
+import { navigate } from '../lib/navigationRef'
 
 interface BannerContent {
   heading: string
@@ -50,6 +50,13 @@ export default function SubscriptionBlockedBanner() {
 
   const { heading, action } = getContent(blockState.reason)
 
+  const handleActionClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault()
+    if (action) {
+      navigate(action.href)
+    }
+  }
+
   return (
     <div
       className="sub-banner"
@@ -61,7 +68,11 @@ export default function SubscriptionBlockedBanner() {
         <span className="sub-banner__icon" aria-hidden="true">⚠</span>
         <p className="sub-banner__text">{heading}</p>
         {action && (
-          <a className="sub-banner__action" href={action.href}>
+          <a
+            className="sub-banner__action"
+            href={action.href}
+            onClick={handleActionClick}
+          >
             {action.label}
           </a>
         )}

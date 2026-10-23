@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore'
 
 beforeEach(() => {
   localStorage.clear()
+  sessionStorage.clear()
 })
 
 function renderWithAuth(authStatus: 'authenticated' | 'unauthenticated' | 'idle' | 'loading') {
