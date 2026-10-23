@@ -11,6 +11,7 @@ import { useAuthStore } from '../stores/authStore'
  */
 export default function ProtectedRoute() {
   const status = useAuthStore((s) => s.status)
+  const user = useAuthStore((s) => s.user)
   const location = useLocation()
 
   if (status === 'idle' || status === 'loading') {
@@ -20,6 +21,10 @@ export default function ProtectedRoute() {
 
   if (status === 'unauthenticated') {
     return <Navigate to="/login" state={{ from: location }} replace />
+  }
+
+  if (user?.mustChangePassword) {
+    return <Navigate to="/first-login-password" replace />
   }
 
   // 'loading' and 'authenticated' both pass through; the loading spinner

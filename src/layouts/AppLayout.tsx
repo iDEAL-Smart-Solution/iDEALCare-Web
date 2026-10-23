@@ -1,17 +1,8 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import SubscriptionBlockedBanner from '../components/SubscriptionBlockedBanner'
 import { useAuthStore } from '../stores/authStore'
-import './AppLayout.css'
+import { getRoleExperience } from '../config/roleExperience'
 
-/**
- * Authenticated application shell.
- *
- * Provides:
- *  - Sidebar with placeholder navigation entries
- *  - Header with app title and logged-in user display
- *  - Main content area rendered via <Outlet />
- *  - Logout action
- */
 export default function AppLayout() {
   const user = useAuthStore((s) => s.user)
   const tenant = useAuthStore((s) => s.tenant)
@@ -27,6 +18,8 @@ export default function AppLayout() {
     ? `${user.firstName} ${user.lastName}`.trim()
     : 'Account'
 
+  const experience = getRoleExperience(tenant?.tenant_role)
+
   return (
     <div className="app-shell">
       {/* ── Sidebar ─────────────────────────────────────────────── */}
@@ -38,38 +31,15 @@ export default function AppLayout() {
 
         <nav className="app-sidebar__nav">
           <ul role="list">
-            <li>
-              <NavLink
-                to="/app/dashboard"
-                className={({ isActive }) =>
-                  isActive ? 'nav-link nav-link--active' : 'nav-link'
-                }
-              >
-                <span className="nav-link__icon" aria-hidden="true">⊞</span>
-                Dashboard
-              </NavLink>
-            </li>
-            <li>
-              <NavLink
-                to="/app/patients"
-                className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}
-              >
-                <span className="nav-link__icon" aria-hidden="true">○</span>
-                Patients
-              </NavLink>
-            </li>
-            <li>
-              <span className="nav-link nav-link--placeholder">
-                <span className="nav-link__icon" aria-hidden="true">○</span>
-                Schedule
-              </span>
-            </li>
-            <li>
-              <span className="nav-link nav-link--placeholder">
-                <span className="nav-link__icon" aria-hidden="true">○</span>
-                Billing
-              </span>
-            </li>
+            {experience?.navigation.map((item) => <li key={`${item.label}-${item.path ?? 'placeholder'}`}>
+              {item.placeholder ? <span className="nav-link nav-link--placeholder">
+                <span className="nav-link__icon" aria-hidden="true">{item.icon}</span>
+                {item.label}
+              </span> : <NavLink to={item.path!} className={({ isActive }) => isActive ? 'nav-link nav-link--active' : 'nav-link'}>
+                <span className="nav-link__icon" aria-hidden="true">{item.icon}</span>
+                {item.label}
+              </NavLink>}
+            </li>)}
           </ul>
         </nav>
 
@@ -119,3 +89,4 @@ export default function AppLayout() {
     </div>
   )
 }
+

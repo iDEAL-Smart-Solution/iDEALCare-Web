@@ -70,6 +70,6 @@ describe('patientApi', () => {
     vi.mocked(apiClient.get).mockResolvedValue({ data: [] })
     const result = await patientApi.listAccessiblePatients('guardian-id')
     expect(result).toEqual([])
-    expect(apiClient.get).toHaveBeenCalledWith('/api/guardians/guardian-id/patients')
+    expect(apiClient.get).toHaveBeenCalledWith('/api/patients/by-guardian/guardian-id')
   })
 })

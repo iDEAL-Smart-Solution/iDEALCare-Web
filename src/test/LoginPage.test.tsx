@@ -22,9 +22,10 @@ function renderLoginPage(initialPath = '/login') {
   )
 }
 
-/** Reset Zustand store and localStorage between tests. */
+/** Reset Zustand store and sessionStorage/localStorage between tests. */
 beforeEach(() => {
   localStorage.clear()
+  sessionStorage.clear()
   vi.clearAllMocks()
   const initialState = useAuthStore.getInitialState()
   useAuthStore.setState({

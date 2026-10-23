@@ -31,6 +31,8 @@ export interface PatientDto {
   requestedServiceId?: string | null
   careLocationType: CareLocationType
   status: PatientStatus
+  registrationReviewReason?: string | null
+  informationRequest?: string | null
   homeCareAddress?: string | null
   homeCareCity?: string | null
   homeCareState?: string | null
@@ -69,6 +71,7 @@ interface PatientProfileFields {
   religion?: string
   phoneNumber?: string
   email?: string
+  userName?: string
   address?: string
   city?: string
   state?: string
@@ -105,9 +108,15 @@ export interface UpdatePatientStatusRequest {
   status: PatientStatus
 }
 
+export interface ReviewPatientRegistrationRequest {
+  decision: 'Approve' | 'Reject' | 'RequestInfo'
+  reason?: string
+}
+
 export interface RegisterPatientAccountRequest {
   domain: string
   email: string
+  userName: string
   password: string
   firstName: string
   middleName?: string
@@ -115,21 +124,69 @@ export interface RegisterPatientAccountRequest {
   dateOfBirth: string
   sex: Sex
   careLocationType: CareLocationType
+  requestedServiceId?: string
+  phoneNumber?: string
+  address?: string
+  city?: string
+  state?: string
+  country?: string
+  nextOfKinFullName?: string
+  nextOfKinRelationship?: string
+  nextOfKinPhoneNumber?: string
+  nextOfKinEmail?: string
+  nextOfKinAddress?: string
+  nextOfKinCountry?: string
+  nextOfKinIsEmergencyContact?: boolean
 }
 
-export interface PatientRegistrationResponse {
-  token: string
-  expiresAt: string
-  user: {
-    id: string
-    email: string
-    firstName: string
-    lastName: string
-  }
-  activeTenant: {
-    tenantId: string
-    name: string
-    domain: string
-    role: string
-  }
+export interface RegistrationInvoiceDto {
+  id: string
+  tenantId: string
+  patientId: string
+  invoiceType: number
+  status: number
+  totalAmount: number
+  amountPaid: number
+  outstandingAmount: number
+  isRefundable: boolean
+  carePeriodStart?: string | null
+  carePeriodEnd?: string | null
+  paymentDeadline?: string | null
+  notes?: string | null
+  createdAt: string
+  items?: { id: string; itemType: number; description: string; amount: number }[]
 }
+
+export interface MedicalItemDto {
+  id: string
+  patientId: string
+  name: string
+  description?: string | null
+  price: number
+  status: 1 | 2 | 3 | 4
+  paidAt?: string | null
+  suppliedAt?: string | null
+  createdAt: string
+}
+
+export interface PatientAppointmentDto {
+  id: string
+  appointmentType: number
+  status: number
+  scheduledAt: string
+  durationMinutes?: number | null
+  location?: string | null
+  notes?: string | null
+  assignedStaffUserName?: string | null
+}
+
+export interface PatientCareRecordDto {
+  id: string
+  recordType: number
+  content: string
+  recordedAt: string
+}
+
+import type { LoginResponse } from './auth'
+
+export type PatientRegistrationResponse = LoginResponse

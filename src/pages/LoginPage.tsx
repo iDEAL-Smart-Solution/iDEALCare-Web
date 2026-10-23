@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
-import './LoginPage.css'
+import { getRoleEntryPoint } from '../config/roleExperience'
 
 /**
  * Login page.
@@ -13,14 +13,24 @@ import './LoginPage.css'
 export default function LoginPage() {
   const login = useAuthStore((s) => s.login)
   const status = useAuthStore((s) => s.status)
+  const user = useAuthStore((s) => s.user)
   const navigate = useNavigate()
   const location = useLocation()
 
   const from = (location.state as { from?: { pathname?: string; search?: string; hash?: string } } | null)?.from
-  const redirectTarget = from ? `${from.pathname ?? '/app/dashboard'}${from.search ?? ''}${from.hash ?? ''}` : '/app/dashboard'
+  const requestedReturnUrl = new URLSearchParams(location.search).get('returnUrl')
+  const passwordChanged = (location.state as { passwordChanged?: boolean } | null)?.passwordChanged === true
+  const safeReturnUrl = requestedReturnUrl?.startsWith('/') && !requestedReturnUrl.startsWith('//')
+    ? requestedReturnUrl
+    : undefined
+  const redirectTarget = () => {
+    const defaultEntryPoint = getRoleEntryPoint(useAuthStore.getState().tenant?.tenant_role)
+    return from ? `${from.pathname ?? defaultEntryPoint}${from.search ?? ''}${from.hash ?? ''}` : safeReturnUrl ?? defaultEntryPoint
+  }
 
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(() => new URLSearchParams(location.search).get('email') ?? '')
   const [password, setPassword] = useState('')
+  const [domain, setDomain] = useState(() => new URLSearchParams(location.search).get('domain') ?? import.meta.env.VITE_DEV_TENANT_DOMAIN ?? '')
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
@@ -31,7 +41,10 @@ export default function LoginPage() {
   }
 
   if (status === 'authenticated') {
-    return <Navigate to={redirectTarget} replace />
+    if (user?.mustChangePassword) {
+      return <Navigate to="/first-login-password" replace />
+    }
+    return <Navigate to={redirectTarget()} replace />
   }
 
   function validate(): boolean {
@@ -39,8 +52,6 @@ export default function LoginPage() {
 
     if (!email.trim()) {
       errors.email = 'Email is required.'
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      errors.email = 'Enter a valid email address.'
     }
 
     if (!password) {
@@ -60,8 +71,8 @@ export default function LoginPage() {
     if (!validate()) return
 
     try {
-      await login({ email: email.trim(), password })
-      navigate(redirectTarget, { replace: true })
+      await login({ email: email.trim(), password, domain: domain.trim() || undefined })
+      navigate(redirectTarget(), { replace: true })
     } catch {
       setSubmitError('Invalid email or password. Please try again.')
     }
@@ -73,6 +84,7 @@ export default function LoginPage() {
         <div className="login-card__brand" aria-hidden="true">✦</div>
         <h1 className="login-card__title">iDEAL Care</h1>
         <p className="login-card__subtitle">Sign in to your account</p>
+        {passwordChanged && <div className="notice notice--success" role="status">Password updated. Sign in with your new password.</div>}
 
         <form
           className="login-form"
@@ -80,18 +92,35 @@ export default function LoginPage() {
           noValidate
           aria-label="Sign in form"
         >
+          {/* ── Clinic Domain ─────────────────────────────────── */}
+          <div className="form-field">
+            <label className="form-label" htmlFor="domain">
+              Clinic Domain
+            </label>
+            <input
+              id="domain"
+              type="text"
+              className="form-input"
+              value={domain}
+              onChange={(e) => setDomain(e.target.value)}
+              placeholder="e.g. yourclinic.idealcare.ng"
+              disabled={isLoading}
+              autoComplete="off"
+            />
+          </div>
+
           {/* ── Email ──────────────────────────────────────── */}
           <div className="form-field">
             <label className="form-label" htmlFor="email">
-              Email
+              Email or username
             </label>
             <input
               id="email"
-              type="email"
+              type="text"
               className={`form-input${fieldErrors.email ? ' form-input--error' : ''}`}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              autoComplete="email"
+              autoComplete="username"
               autoFocus
               disabled={isLoading}
               aria-describedby={fieldErrors.email ? 'email-error' : undefined}
@@ -144,6 +173,13 @@ export default function LoginPage() {
             {isLoading ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: 'var(--text)' }}>
+          <span>New patient? </span>
+          <Link to="/register" style={{ color: 'var(--accent)', fontWeight: 500, textDecoration: 'underline' }}>
+            Register for care here
+          </Link>
+        </div>
       </div>
     </div>
   )

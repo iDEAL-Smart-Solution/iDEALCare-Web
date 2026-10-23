@@ -29,6 +29,7 @@ const mockLoginResponse: LoginResponse = {
 
 beforeEach(() => {
   localStorage.clear()
+  sessionStorage.clear()
   useAuthStore.setState({
     status: 'unauthenticated',
     user: null,
@@ -41,30 +42,30 @@ beforeEach(() => {
 describe('authStore – restoreAuth', () => {
   it('does not mark the app authenticated when only a token exists without restored user or tenant data', () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString()
-    localStorage.setItem('idealcare.accessToken', 'persisted-token')
-    localStorage.setItem('idealcare.expiresAt', expiresAt)
+    sessionStorage.setItem('idealcare.accessToken', 'persisted-token')
+    sessionStorage.setItem('idealcare.expiresAt', expiresAt)
 
     useAuthStore.getState().restoreAuth()
 
     expect(useAuthStore.getState().status).toBe('unauthenticated')
     expect(useAuthStore.getState().user).toBeNull()
     expect(useAuthStore.getState().tenant).toBeNull()
-    expect(localStorage.getItem('idealcare.accessToken')).toBeNull()
-    expect(localStorage.getItem('idealcare.expiresAt')).toBeNull()
+    expect(sessionStorage.getItem('idealcare.accessToken')).toBeNull()
+    expect(sessionStorage.getItem('idealcare.expiresAt')).toBeNull()
   })
 })
 
 // ── 7. Logout clears authentication state ────────────────────────────────────
 
 describe('authStore – logout', () => {
-  it('clears all authentication state and localStorage', async () => {
+  it('clears all authentication state and sessionStorage', async () => {
     vi.mocked(authApi.login).mockResolvedValueOnce(mockLoginResponse)
 
     await useAuthStore.getState().login({ email: 'jane@example.com', password: 'pass' })
 
     // Confirm we are authenticated first
     expect(useAuthStore.getState().status).toBe('authenticated')
-    expect(localStorage.getItem('idealcare.accessToken')).not.toBeNull()
+    expect(sessionStorage.getItem('idealcare.accessToken')).not.toBeNull()
     expect(useAuthStore.getState().tenant).toEqual({
       tenant_id: 'tenant-1',
       tenant_role: 'Owner',
@@ -79,6 +80,6 @@ describe('authStore – logout', () => {
     expect(user).toBeNull()
     expect(accessToken).toBeNull()
     expect(tenant).toBeNull()
-    expect(localStorage.getItem('idealcare.accessToken')).toBeNull()
+    expect(sessionStorage.getItem('idealcare.accessToken')).toBeNull()
   })
 })

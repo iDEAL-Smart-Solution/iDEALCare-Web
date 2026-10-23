@@ -3,11 +3,18 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import PatientsPage, { PatientCreatePage, PatientDetailPage } from '../pages/PatientsPage'
 import { patientApi } from '../api/patientApi'
+import { careServiceApi } from '../api/careServiceApi'
 
 vi.mock('../api/patientApi', () => ({
   patientApi: {
     list: vi.fn(), get: vi.fn(), listGuardians: vi.fn(), update: vi.fn(), create: vi.fn(),
     updateStatus: vi.fn(), assignGuardian: vi.fn(), updateGuardianPermissions: vi.fn(), revokeGuardian: vi.fn(),
+  },
+}))
+
+vi.mock('../api/careServiceApi', () => ({
+  careServiceApi: {
+    getCatalog: vi.fn(),
   },
 }))
 
@@ -20,7 +27,10 @@ function httpError(status: number) {
 }
 
 describe('PatientsPage', () => {
-  beforeEach(() => vi.clearAllMocks())
+  beforeEach(() => {
+    vi.clearAllMocks()
+    vi.mocked(careServiceApi.getCatalog).mockResolvedValue([])
+  })
 
   it('shows an empty state for an empty patient page', async () => {
     vi.mocked(patientApi.list).mockResolvedValue({ items: [], pageNumber: 1, pageSize: 20, totalCount: 0 })
@@ -121,7 +131,7 @@ describe('PatientsPage', () => {
   it('renders the create form without fetching a patient or guardians', async () => {
     renderPatients('/app/patients/new')
 
-    expect(screen.getByRole('heading', { name: 'Register patient' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Register patient' })).toBeInTheDocument()
     expect(patientApi.get).not.toHaveBeenCalled()
     expect(patientApi.listGuardians).not.toHaveBeenCalled()
   })
@@ -139,17 +149,44 @@ describe('PatientsPage', () => {
     expect(patientApi.get).not.toHaveBeenCalled()
   })
 
-  it('renders the documented patient profile fields', () => {
+  it('renders the documented patient profile fields', async () => {
     renderPatients('/app/patients/new')
+    expect(await screen.findByRole('heading', { name: 'Register patient' })).toBeInTheDocument()
 
     for (const label of [
       'Marital status', 'Occupation', 'Religion', 'Email', 'Phone', 'Address', 'City', 'State', 'Country',
-      'Requested service ID', 'Next-of-kin full name', 'Next-of-kin relationship', 'Next-of-kin phone',
+      'Requested service', 'Next-of-kin full name', 'Next-of-kin relationship', 'Next-of-kin phone',
       'Next-of-kin alternative phone', 'Next-of-kin email', 'Next-of-kin address', 'Next-of-kin country',
       'Care location',
     ]) {
       expect(screen.getByLabelText(new RegExp(label))).toBeInTheDocument()
     }
+  })
+
+  it('populates care services dropdown from catalog and submits selected service', async () => {
+    const mockServices = [
+      { id: '00000000-0000-4000-8000-000000000101', name: 'Elderly Day Care', price: 25000, bookingModel: 1 as const, availableForFacilityCare: true, availableForHomecare: false },
+      { id: '00000000-0000-4000-8000-000000000102', name: 'Home Nursing Visit', price: 40000, bookingModel: 2 as const, availableForFacilityCare: false, availableForHomecare: true },
+    ]
+    vi.mocked(careServiceApi.getCatalog).mockResolvedValue(mockServices)
+    vi.mocked(patientApi.create).mockResolvedValue({ id: 'patient-id', firstName: 'A', lastName: 'Patient', dateOfBirth: '1980-01-01', age: 46, sex: 4, careLocationType: 1, status: 1, createdAt: '2026-01-01', updatedAt: '2026-01-01' })
+
+    renderPatients('/app/patients/new')
+
+    expect(await screen.findByRole('option', { name: 'Elderly Day Care (₦25,000)' })).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: 'Home Nursing Visit (₦40,000)' })).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/First name/), { target: { value: 'A' } })
+    fireEvent.change(screen.getByLabelText(/Last name/), { target: { value: 'Patient' } })
+    fireEvent.change(screen.getByLabelText(/Date of birth/), { target: { value: '1980-01-01' } })
+    fireEvent.change(screen.getByLabelText(/Requested service/), { target: { value: '00000000-0000-4000-8000-000000000101' } })
+    fireEvent.submit(screen.getByRole('button', { name: 'Create patient' }))
+
+    await waitFor(() => expect(patientApi.create).toHaveBeenCalledWith(expect.objectContaining({
+      firstName: 'A',
+      lastName: 'Patient',
+      requestedServiceId: '00000000-0000-4000-8000-000000000101',
+    })))
   })
 
   it('computes combined guardian grant and revoke masks', async () => {

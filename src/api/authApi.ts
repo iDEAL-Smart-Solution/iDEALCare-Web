@@ -2,16 +2,6 @@ import { mockLoginResponse } from '../data/mockAuth'
 import apiClient from '../lib/apiClient'
 import type { LoginRequest, LoginResponse } from '../types/auth'
 
-/**
- * Authentication API service.
- * All calls to /api/auth/* live here — not in pages or components.
- *
- * When VITE_DEV_BYPASS_AUTH=true the login call returns mock data
- * immediately without hitting the network. All other behaviour
- * (token storage, store state, routing) is identical to production.
- *
- * To switch to real auth: set VITE_DEV_BYPASS_AUTH=false (or remove it).
- */
 const DEV_BYPASS = import.meta.env.VITE_DEV_BYPASS_AUTH === 'true'
 
 function getTenantDomain(): string {
@@ -28,9 +18,11 @@ export const authApi = {
       return mockLoginResponse
     }
 
+    const domain = credentials.domain?.trim() || getTenantDomain()
+
     const response = await apiClient.post<LoginResponse>(
       '/api/auth/login',
-      { ...credentials, domain: getTenantDomain() },
+      { email: credentials.email, password: credentials.password, domain },
     )
     return response.data
   },

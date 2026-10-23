@@ -2,7 +2,7 @@ import { create } from 'zustand'
 import { authApi } from '../api/authApi'
 import { mockLoginResponse } from '../data/mockAuth'
 import { authStorage } from '../lib/authStorage'
-import type { AuthUser, LoginRequest, TenantContext } from '../types/auth'
+import type { AuthUser, LoginRequest, LoginResponse, TenantContext } from '../types/auth'
 
 export type AuthStatus = 'idle' | 'loading' | 'authenticated' | 'unauthenticated'
 
@@ -16,6 +16,9 @@ interface AuthState {
 
   /** Call once on application startup to restore a persisted session. */
   restoreAuth: () => void
+
+  /** Sets session directly from a successful login or registration response. */
+  setSession: (response: LoginResponse) => void
 
   /** Calls the login API (or returns mock data in dev bypass mode). */
   login: (credentials: LoginRequest) => Promise<void>
@@ -44,19 +47,45 @@ export const useAuthStore = create<AuthState>((set) => ({
     }
 
     const token = authStorage.getToken()
+    const user = authStorage.getUser()
+    const tenant = authStorage.getTenant()
 
-    if (!token || authStorage.isTokenExpired()) {
+    if (!token || authStorage.isTokenExpired() || !user) {
       authStorage.clear()
       set({ status: 'unauthenticated', user: null, accessToken: null, tenant: null })
       return
     }
 
-    // The app only persists the access token and expiry. There is no
-    // documented session-restoration API that rehydrates user/tenant state,
-    // so a valid token alone must not be treated as a full authenticated
-    // session for the UI.
-    authStorage.clear()
-    set({ status: 'unauthenticated', user: null, accessToken: null, tenant: null })
+    set({
+      status: 'authenticated',
+      accessToken: token,
+      user,
+      tenant,
+    })
+  },
+
+  setSession(response: LoginResponse) {
+    const tenantRaw = response.tenant as unknown as Record<string, string | undefined>
+    const normalizedTenant: TenantContext = {
+      tenant_id: tenantRaw.tenant_id ?? tenantRaw.tenantId ?? '',
+      tenant_role: tenantRaw.tenant_role ?? tenantRaw.role ?? '',
+      tenantName: response.tenant?.tenantName,
+      domain: response.tenant?.domain,
+    }
+
+    authStorage.saveSession(
+      response.accessToken,
+      response.expiresAt,
+      response.user,
+      normalizedTenant,
+    )
+
+    set({
+      status: 'authenticated',
+      accessToken: response.accessToken,
+      user: response.user,
+      tenant: normalizedTenant,
+    })
   },
 
   async login(credentials: LoginRequest) {
@@ -65,13 +94,26 @@ export const useAuthStore = create<AuthState>((set) => ({
     try {
       const response = await authApi.login(credentials)
 
-      authStorage.saveToken(response.accessToken, response.expiresAt)
+      const tenantRaw = response.tenant as unknown as Record<string, string | undefined>
+      const normalizedTenant: TenantContext = {
+        tenant_id: tenantRaw.tenant_id ?? tenantRaw.tenantId ?? '',
+        tenant_role: tenantRaw.tenant_role ?? tenantRaw.role ?? '',
+        tenantName: response.tenant.tenantName,
+        domain: response.tenant.domain,
+      }
+
+      authStorage.saveSession(
+        response.accessToken,
+        response.expiresAt,
+        response.user,
+        normalizedTenant,
+      )
 
       set({
         status: 'authenticated',
         accessToken: response.accessToken,
         user: response.user,
-        tenant: response.tenant,
+        tenant: normalizedTenant,
       })
     } catch (error) {
       authStorage.clear()
