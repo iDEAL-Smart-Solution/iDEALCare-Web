@@ -6,6 +6,7 @@ import { authStorage } from './authStorage'
 import { navigate } from './navigationRef'
 
 const LOGIN_ENDPOINT = '/api/auth/login'
+const PUBLIC_ENDPOINTS = ['/api/auth/tenant-branding', '/api/care-services/catalog']
 
 const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL ?? '',
@@ -45,7 +46,7 @@ apiClient.interceptors.response.use(
 
 
     if (status === 401) {
-      if (requestUrl.includes(LOGIN_ENDPOINT)) {
+      if (requestUrl.includes(LOGIN_ENDPOINT) || PUBLIC_ENDPOINTS.some((endpoint) => requestUrl.includes(endpoint)) || window.location.pathname === '/register') {
         return Promise.reject(error)
       }
 

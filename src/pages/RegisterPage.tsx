@@ -1,17 +1,21 @@
 import { type FormEvent, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { patientApi } from '../api/patientApi'
 import { careServiceApi } from '../api/careServiceApi'
+import { getTenantDomain } from '../api/authApi'
 import { useAuthStore } from '../stores/authStore'
 import type { CareLocationType, RegisterPatientAccountRequest, Sex } from '../types/patient'
 import type { CareServiceCatalogItem } from '../types/careService'
 
 export default function RegisterPage() {
   const navigate = useNavigate()
+  const location = useLocation()
   const setSession = useAuthStore((s) => s.setSession)
 
-  const [domain, setDomain] = useState(import.meta.env.VITE_DEV_TENANT_DOMAIN ?? '')
+  const [domain] = useState(() =>
+    new URLSearchParams(location.search).get('domain')?.trim() || getTenantDomain(),
+  )
   const [firstName, setFirstName] = useState('')
   const [middleName, setMiddleName] = useState('')
   const [lastName, setLastName] = useState('')
@@ -41,8 +45,13 @@ export default function RegisterPage() {
   // Try to load care service catalog for preview if user/tenant has access
   useEffect(() => {
     let active = true
+    const clinicDomain = domain.trim()
+    if (!clinicDomain) {
+      setServices([])
+      return () => { active = false }
+    }
     careServiceApi
-      .getCatalog()
+      .getCatalog(clinicDomain)
       .then((items) => {
         if (active) setServices(items)
       })
@@ -147,10 +156,10 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="register-page">
-      <div className="register-card" role="main">
+    <main className="register-page">
+      <section className="register-card" aria-labelledby="register-title">
         <div className="register-card__brand" aria-hidden="true">✦</div>
-        <h1 className="register-card__title">Patient Registration</h1>
+        <h1 className="register-card__title" id="register-title">Patient Registration</h1>
         <p className="register-card__subtitle">Create your personal patient portal account</p>
 
         {submitError && (
@@ -160,22 +169,6 @@ export default function RegisterPage() {
         )}
 
         <form className="register-form" onSubmit={handleSubmit} noValidate>
-          {/* Clinic domain */}
-          <div className="form-field">
-            <label className="form-label" htmlFor="reg-domain">Clinic Domain *</label>
-            <input
-              id="reg-domain"
-              type="text"
-              className={`form-input${fieldErrors.domain ? ' form-input--error' : ''}`}
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              placeholder="e.g. test-clinic"
-              disabled={submitting}
-              autoComplete="off"
-            />
-            {fieldErrors.domain && <span className="form-error">{fieldErrors.domain}</span>}
-          </div>
-
           {/* Personal Information */}
           <fieldset className="register-fieldset">
             <legend className="register-legend">Personal Details</legend>
@@ -263,7 +256,7 @@ export default function RegisterPage() {
             </div>
 
             {services.length > 0 && (
-              <div className="form-field" style={{ marginTop: '12px' }}>
+              <div className="form-field register-service-field">
                 <label className="form-label" htmlFor="reg-service">Desired Clinical Service</label>
                 <select
                   id="reg-service"
@@ -281,7 +274,9 @@ export default function RegisterPage() {
                 </select>
               </div>
             )}
-            <fieldset className="register-fieldset">
+          </fieldset>
+
+          <fieldset className="register-fieldset">
               <legend className="register-legend">Contact & Emergency Contact</legend>
               <div className="register-grid">
                 <label className="form-field">Phone number<input className="form-input" type="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} /></label>
@@ -294,12 +289,12 @@ export default function RegisterPage() {
                 <label className="form-field">Next of kin phone<input className="form-input" type="tel" value={nextOfKinPhoneNumber} onChange={(e) => setNextOfKinPhoneNumber(e.target.value)} /></label>
                 <label className="form-field">Next of kin email<input className="form-input" type="email" value={nextOfKinEmail} onChange={(e) => setNextOfKinEmail(e.target.value)} /></label>
               </div>
-            </fieldset>
           </fieldset>
 
           {/* Credentials */}
           <fieldset className="register-fieldset">
             <legend className="register-legend">Portal Login Credentials</legend>
+            <div className="register-grid">
             <div className="form-field">
               <label className="form-label" htmlFor="reg-email">Email Address *</label>
               <input
@@ -321,7 +316,6 @@ export default function RegisterPage() {
               {fieldErrors.userName && <span className="form-error">{fieldErrors.userName}</span>}
             </div>
 
-            <div className="register-grid">
               <div className="form-field">
                 <label className="form-label" htmlFor="reg-password">Password *</label>
                 <input
@@ -369,8 +363,9 @@ export default function RegisterPage() {
           <Link to="/login" className="register-link">
             Sign in to your account
           </Link>
+          <span> · Are you a guardian? </span><Link to="/guardian/register" className="register-link">Create a guardian account</Link>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   )
 }

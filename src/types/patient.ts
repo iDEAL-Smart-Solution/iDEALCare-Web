@@ -148,6 +148,7 @@ export interface RegistrationInvoiceDto {
   totalAmount: number
   amountPaid: number
   outstandingAmount: number
+  requiredDeposit?: number | null
   isRefundable: boolean
   carePeriodStart?: string | null
   carePeriodEnd?: string | null

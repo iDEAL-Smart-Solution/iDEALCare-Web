@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import { patientApi } from '../api/patientApi'
 import type { PatientAppointmentDto, PatientCareRecordDto, PatientDto, RegistrationInvoiceDto, MedicalItemDto } from '../types/patient'
 import RegistrationFeePage from './RegistrationFeePage'
+import type { GuardianAccessDto } from '../types/guardian'
 
 const money = (amount: number) => `₦${amount.toLocaleString()}`
 
@@ -12,6 +13,7 @@ export default function PatientDashboardPage() {
   const [medicalItems, setMedicalItems] = useState<MedicalItemDto[]>([])
   const [appointments, setAppointments] = useState<PatientAppointmentDto[]>([])
   const [records, setRecords] = useState<PatientCareRecordDto[]>([])
+  const [guardians, setGuardians] = useState<GuardianAccessDto[]>([])
   const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,6 +24,7 @@ export default function PatientDashboardPage() {
     try {
       const me = await patientApi.getMe()
       setPatient(me)
+      try { setGuardians(await patientApi.listMyGuardians()) } catch { setGuardians([]) }
       if (me.status !== 6) return
       const [bills, items, visits, care] = await Promise.allSettled([
         patientApi.getInvoices(me.id),
@@ -46,9 +49,18 @@ export default function PatientDashboardPage() {
 
   useEffect(() => { void load() }, [])
 
+  const guardianAccessPanel = <section className="patient-dashboard__panel guardian-consent-panel">
+    <div className="patient-dashboard__panel-heading"><div><span className="eyebrow">Privacy & access</span><h3>Guardian access</h3></div><Link to="/app/patient/guardians">Manage guardian access →</Link></div>
+    {guardians.filter((link) => link.isActive && !link.consentGranted).length > 0
+      ? <p className="patient-dashboard__empty">You have {guardians.filter((link) => link.isActive && !link.consentGranted).length} guardian request(s) waiting for your approval.</p>
+      : guardians.filter((link) => link.isActive).length === 0
+        ? <p className="patient-dashboard__empty">No guardians are currently linked to your account.</p>
+        : <p className="patient-dashboard__empty">Review which guardians can access your care information.</p>}
+  </section>
+
   if (loading && !patient) return <div className="patient-portal"><p className="state-message">Loading your patient dashboard…</p></div>
   if (!patient) return <div className="patient-portal"><div className="notice notice--error" role="alert">{error ?? 'No patient record is linked to your account.'}</div></div>
-  if (patient.status !== 6) return <RegistrationFeePage />
+  if (patient.status !== 6) return <>{guardianAccessPanel}<RegistrationFeePage /></>
 
   const outstandingInvoices = invoices.filter((invoice) => invoice.status !== 3 && invoice.status !== 5 && invoice.outstandingAmount > 0)
   const outstandingMedical = medicalItems.filter((item) => item.status === 1)
@@ -125,6 +137,8 @@ export default function PatientDashboardPage() {
         </div>
         {outstandingInvoices.length + outstandingMedical.length === 0 && <p className="patient-dashboard__empty">You have no outstanding bills.</p>}
       </section>
+
+      {guardianAccessPanel}
     </div>
   )
 }

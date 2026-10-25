@@ -17,6 +17,9 @@ import type {
 import type {
   GuardianAccessDto,
   GuardianPatientDto,
+  GuardianDirectoryDto,
+  GuardianMedicalInformationDto,
+  GuardianMedicalDocumentDto,
   GrantGuardianAccessRequest,
   UpdateGuardianPermissionsRequest,
 } from '../types/guardian'
@@ -69,6 +72,11 @@ export const patientApi = {
     return response.data
   },
 
+  async listTenantGuardians() {
+    const response = await apiClient.get<GuardianDirectoryDto[]>('/api/patients/guardians')
+    return response.data
+  },
+
   async listStaffAssignments(patientId: string) {
     const response = await apiClient.get<{ id: string; patientId: string; staffUserId: string; staffFirstName: string; staffLastName: string; assignedAt: string }[]>(
       `/api/patients/${patientId}/staff-assignments`,
@@ -113,8 +121,42 @@ export const patientApi = {
     return response.data
   },
 
+  async listMyGuardianPatients() {
+    const response = await apiClient.get<GuardianPatientDto[]>('/api/patients/guardian/me/patients')
+    return response.data
+  },
+
+  async listMyGuardians() {
+    const response = await apiClient.get<GuardianAccessDto[]>('/api/patients/me/guardians')
+    return response.data
+  },
+
+  async setMyGuardianConsent(guardianId: string, permissions: number) {
+    const response = await apiClient.put<GuardianAccessDto>(`/api/patients/me/guardians/${guardianId}/consent`, { permissions })
+    return response.data
+  },
+
+  async revokeMyGuardian(guardianId: string) {
+    await apiClient.delete(`/api/patients/me/guardians/${guardianId}`)
+  },
+
+  async findGuardianByEmail(email: string) {
+    const response = await apiClient.get<GuardianDirectoryDto>('/api/patients/guardian-lookup', { params: { email } })
+    return response.data
+  },
+
   async getMe() {
     const response = await apiClient.get<PatientDto>('/api/patients/me')
+    return response.data
+  },
+
+  async getMedicalInformation(patientId: string) {
+    const response = await apiClient.get<GuardianMedicalInformationDto>(`/api/medical/patients/${patientId}/information`)
+    return response.data
+  },
+
+  async getMedicalDocuments(patientId: string) {
+    const response = await apiClient.get<GuardianMedicalDocumentDto[]>(`/api/medical/patients/${patientId}/documents`)
     return response.data
   },
 
@@ -168,6 +210,16 @@ export const patientApi = {
 
   async getCareRecords(patientId: string) {
     const response = await apiClient.get<PatientCareRecordDto[]>(`/api/care-records/patients/${patientId}`)
+    return response.data
+  },
+
+  async getActiveAdmission(patientId: string) {
+    const response = await apiClient.get<{ admissionId: string }>(`/api/care-records/patients/${patientId}/active-admission`)
+    return response.data
+  },
+
+  async createCareRecord(patientId: string, request: { recordType: number; content: string; admissionId: string }) {
+    const response = await apiClient.post<PatientCareRecordDto>(`/api/care-records/patients/${patientId}`, request)
     return response.data
   },
 
