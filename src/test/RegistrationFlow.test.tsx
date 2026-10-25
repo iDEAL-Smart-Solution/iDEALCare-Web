@@ -50,7 +50,7 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByLabelText(/clinic domain/i)).toBeInTheDocument()
+    expect(screen.queryByLabelText(/clinic domain/i)).not.toBeInTheDocument()
     expect(screen.getByLabelText(/first name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/last name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/date of birth/i)).toBeInTheDocument()
@@ -99,7 +99,7 @@ describe('RegisterPage', () => {
     })
 
     render(
-      <MemoryRouter initialEntries={['/register']}>
+      <MemoryRouter initialEntries={['/register?domain=test-clinic']}>
         <Routes>
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/app/registration-fee" element={<div>Registration Fee Destination</div>} />
@@ -107,13 +107,12 @@ describe('RegisterPage', () => {
       </MemoryRouter>
     )
 
-    const domainInput = screen.getByLabelText(/clinic domain/i)
-    await userEvent.clear(domainInput)
-    await userEvent.type(domainInput, 'test-clinic')
+    await waitFor(() => expect(careServiceApi.getCatalog).toHaveBeenCalledWith('test-clinic'))
     await userEvent.type(screen.getByLabelText(/first name/i), 'Jane')
     await userEvent.type(screen.getByLabelText(/last name/i), 'Doe')
     await userEvent.type(screen.getByLabelText(/date of birth/i), '1995-05-15')
     await userEvent.type(screen.getByLabelText(/email address/i), 'jane.doe@example.com')
+    await userEvent.type(screen.getByLabelText(/choose a username/i), 'jane.doe')
     await userEvent.type(screen.getByLabelText(/^password \*/i), 'Secret123!')
     await userEvent.type(screen.getByLabelText(/confirm password/i), 'Secret123!')
 

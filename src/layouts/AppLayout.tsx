@@ -1,13 +1,39 @@
+import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import SubscriptionBlockedBanner from '../components/SubscriptionBlockedBanner'
 import { useAuthStore } from '../stores/authStore'
 import { getRoleExperience } from '../config/roleExperience'
+import { useNotificationStore } from '../stores/notificationStore'
+import PatientNotificationsPopover from '../components/PatientNotificationsPopover'
 
 export default function AppLayout() {
   const user = useAuthStore((s) => s.user)
   const tenant = useAuthStore((s) => s.tenant)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+  const refreshNotifications = useNotificationStore((s) => s.refresh)
+  const clearNotifications = useNotificationStore((s) => s.clear)
+  const isPatient = tenant?.tenant_role?.toLowerCase() === 'patient'
+
+  useEffect(() => {
+    if (!isPatient) {
+      clearNotifications()
+      return
+    }
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') void refreshNotifications()
+    }
+    void refreshNotifications()
+    const interval = window.setInterval(() => void refreshNotifications(), 30_000)
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
+  }, [isPatient, user?.id, clearNotifications, refreshNotifications])
 
   function handleLogout() {
     logout()
@@ -19,6 +45,13 @@ export default function AppLayout() {
     : 'Account'
 
   const experience = getRoleExperience(tenant?.tenant_role)
+  const tenantDisplayName = tenant?.tenantName?.trim() || 'iDEAL Care'
+
+  useEffect(() => {
+    const previousTitle = document.title
+    document.title = tenantDisplayName
+    return () => { document.title = previousTitle }
+  }, [tenantDisplayName])
 
   return (
     <div className="app-shell">
@@ -26,7 +59,7 @@ export default function AppLayout() {
       <aside className="app-sidebar" aria-label="Main navigation">
         <div className="app-sidebar__brand">
           <span className="app-sidebar__logo" aria-hidden="true">✦</span>
-          <span className="app-sidebar__name">iDEAL Care</span>
+          <span className="app-sidebar__name">{tenantDisplayName}</span>
         </div>
 
         <nav className="app-sidebar__nav">
@@ -64,8 +97,10 @@ export default function AppLayout() {
       {/* ── Main area ───────────────────────────────────────────── */}
       <div className="app-body">
         <header className="app-header" role="banner">
-          <h1 className="app-header__title">iDEAL Care</h1>
-          <div className="app-header__user">
+          <h1 className="app-header__title">{tenantDisplayName}</h1>
+          <div className="app-header__actions">
+            {isPatient && <PatientNotificationsPopover />}
+            <div className="app-header__user">
             {tenant ? (
               <span>
                 {tenant.tenantName ?? tenant.tenant_id} · {tenant.tenant_role}
@@ -77,6 +112,7 @@ export default function AppLayout() {
             ) : (
               <span>Account</span>
             )}
+            </div>
           </div>
         </header>
 

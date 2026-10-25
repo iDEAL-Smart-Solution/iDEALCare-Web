@@ -45,7 +45,7 @@ export default function TeamDashboardPage({ role }: { role: TeamRole }) {
   return <section className="patients-page team-dashboard">
     <header className="patients-page__header">
       <div>
-        <p className="eyebrow">{tenant?.tenantName ?? 'iDEAL Care'} · {isNurse ? 'Nursing' : 'Care staff'}</p>
+        <p className="eyebrow">{tenant?.tenantName?.trim() || 'iDEAL Care'} · {isNurse ? 'Nursing' : 'Care staff'}</p>
         <h1>{isNurse ? 'Nursing Dashboard' : 'Staff Dashboard'}</h1>
         <p className="muted">Welcome, {user?.firstName ?? 'team member'}. This is your assigned patient caseload.</p>
       </div>

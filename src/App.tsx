@@ -20,6 +20,11 @@ import PatientAssessmentPage from './pages/PatientAssessmentPage'
 import PatientInformationPage from './pages/PatientInformationPage'
 import AssessmentQueuePage from './pages/AssessmentQueuePage'
 import StaffManagementPage from './pages/StaffManagementPage'
+import BillingManagementPage from './pages/BillingManagementPage'
+import GuardianDashboardPage from './pages/GuardianDashboardPage'
+import GuardianRegisterPage from './pages/GuardianRegisterPage'
+import GuardianManagementPage from './pages/GuardianManagementPage'
+import PatientGuardianAccessPage from './pages/PatientGuardianAccessPage'
 
 function RoleRoute({ allowedRoles, children }: { allowedRoles: string[]; children: ReactNode }) {
   const role = useAuthStore((s) => s.tenant?.tenant_role?.toLowerCase())
@@ -71,6 +76,7 @@ export default function App() {
       {/* Public */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/guardian/register" element={<GuardianRegisterPage />} />
       <Route path="/first-login-password" element={<FirstLoginPasswordPage />} />
 
       {/* Protected */}
@@ -79,9 +85,13 @@ export default function App() {
           <Route path="/app/tenant/dashboard" element={<RoleRoute allowedRoles={['owner', 'admin']}><DashboardPage /></RoleRoute>} />
           <Route path="/app/team/dashboard" element={<RoleRoute allowedRoles={['nurse', 'staff']}><TeamDashboardEntry /></RoleRoute>} />
           <Route path="/app/patient/dashboard" element={<RoleRoute allowedRoles={['patient']}><PatientDashboardPage /></RoleRoute>} />
+          <Route path="/app/patient/guardians" element={<RoleRoute allowedRoles={['patient']}><PatientGuardianAccessPage /></RoleRoute>} />
+          <Route path="/app/guardian/dashboard" element={<RoleRoute allowedRoles={['guardian']}><GuardianDashboardPage /></RoleRoute>} />
           <Route path="/app/dashboard" element={<RoleEntryRedirect />} />
           <Route path="/app/subscription" element={<RoleRoute allowedRoles={['owner', 'admin']}><SubscriptionPage /></RoleRoute>} />
           <Route path="/app/staff" element={<RoleRoute allowedRoles={['owner', 'admin']}><StaffManagementPage /></RoleRoute>} />
+          <Route path="/app/guardians" element={<RoleRoute allowedRoles={['owner', 'admin']}><GuardianManagementPage /></RoleRoute>} />
+          <Route path="/app/billing" element={<RoleRoute allowedRoles={['owner', 'admin']}><BillingManagementPage /></RoleRoute>} />
           <Route path="/app/patients" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><PatientsPage /></RoleRoute>} />
           <Route path="/app/patients/new" element={<RoleRoute allowedRoles={['owner', 'admin']}><PatientCreatePage /></RoleRoute>} />
           <Route path="/app/patients/:patientId" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><PatientDetailPage /></RoleRoute>} />

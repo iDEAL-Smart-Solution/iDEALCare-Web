@@ -14,6 +14,8 @@ type BillRow = {
   paid: number
   balance: number
   status: string
+  installmentAllowed: boolean
+  minimumPayment: number
   deadline?: string | null
   createdAt: string
   source: RegistrationInvoiceDto | MedicalItemDto
@@ -38,6 +40,7 @@ export default function PatientBillsPage() {
   const [loading, setLoading] = useState(true)
   const [verifying, setVerifying] = useState(false)
   const [payingId, setPayingId] = useState<string | null>(null)
+  const [paymentAmounts, setPaymentAmounts] = useState<Record<string, string>>({})
   const [notice, setNotice] = useState<{ kind: 'success' | 'error' | 'info'; text: string } | null>(null)
 
   async function load() {
@@ -97,6 +100,9 @@ export default function PatientBillsPage() {
         paid: invoice.status === 5 ? 0 : invoice.amountPaid,
         balance: invoice.status === 5 ? 0 : invoice.outstandingAmount,
         status: invoice.status === 3 ? 'Paid' : invoice.status === 5 ? 'Cancelled' : overdue ? 'Overdue' : invoice.status === 2 ? 'Partially paid' : 'Unpaid',
+        installmentAllowed: (invoice.invoiceType === 2 || invoice.invoiceType === 3)
+          && invoice.requiredDeposit != null && invoice.requiredDeposit > 0 && invoice.requiredDeposit < invoice.totalAmount,
+        minimumPayment: invoice.status === 1 && invoice.requiredDeposit != null ? invoice.requiredDeposit : 0.01,
         deadline: invoice.paymentDeadline,
         createdAt: invoice.createdAt,
         source: invoice,
@@ -111,6 +117,8 @@ export default function PatientBillsPage() {
       paid: item.status === 2 || item.status === 3 ? item.price : 0,
       balance: item.status === 1 ? item.price : 0,
       status: item.status === 1 ? 'Unpaid' : item.status === 4 ? 'Cancelled' : item.status === 3 ? 'Supplied' : 'Paid',
+      installmentAllowed: false,
+      minimumPayment: item.price,
       createdAt: item.createdAt,
       source: item,
     }))
@@ -121,14 +129,18 @@ export default function PatientBillsPage() {
   const totalOutstanding = rows.reduce((sum, row) => sum + row.balance, 0)
   const totalPaid = rows.reduce((sum, row) => sum + row.paid, 0)
 
-  async function pay(row: BillRow) {
+  async function pay(row: BillRow, selectedAmount = row.balance) {
     if (!patient || row.balance <= 0) return
+    if (selectedAmount < row.minimumPayment || selectedAmount > row.balance) {
+      setNotice({ kind: 'error', text: `Choose an amount between ${currency(row.minimumPayment)} and ${currency(row.balance)}.` })
+      return
+    }
     setPayingId(row.id)
     setNotice(null)
     try {
       const callbackUrl = `${window.location.origin}/app/bills`
       const response = row.kind === 'invoice'
-        ? await patientApi.payInvoice(patient.id, row.id, row.balance, callbackUrl)
+        ? await patientApi.payInvoice(patient.id, row.id, selectedAmount, callbackUrl)
         : await patientApi.payMedicalItem(patient.id, row.id, row.total, callbackUrl)
       if (response.authorizationUrl) window.location.href = response.authorizationUrl
       else {
@@ -184,7 +196,7 @@ export default function PatientBillsPage() {
               <td>{currency(row.total)}</td><td>{currency(row.paid)}</td><td className={row.balance > 0 ? 'patient-bills__balance' : ''}>{currency(row.balance)}</td>
               <td>{row.deadline ? new Date(row.deadline).toLocaleDateString() : '—'}</td>
               <td><span className={`patient-bills__status patient-bills__status--${row.status.toLowerCase().replaceAll(' ', '-')}`}>{row.status}</span></td>
-              <td>{row.balance > 0 && <button type="button" className="primary-button patient-bills__pay" onClick={() => void pay(row)} disabled={payingId !== null}>{payingId === row.id ? 'Opening…' : row.kind === 'medical' ? `Pay ${currency(row.total)} once` : `Pay ${currency(row.balance)}`}</button>}</td>
+              <td>{row.balance > 0 && (row.installmentAllowed ? <div className="patient-bills__installment"><label><span>Pay amount (₦)</span><input aria-label={`Amount to pay for ${row.category}`} type="number" min={row.minimumPayment} max={row.balance} step="0.01" value={paymentAmounts[row.id] ?? row.balance.toFixed(2)} onChange={(event) => setPaymentAmounts({ ...paymentAmounts, [row.id]: event.target.value })} disabled={payingId !== null} /></label><button type="button" className="primary-button patient-bills__pay" onClick={() => void pay(row, Number(paymentAmounts[row.id] ?? row.balance))} disabled={payingId !== null}>{payingId === row.id ? 'Opening…' : 'Pay selected amount'}</button><small>{row.status === 'Unpaid' ? `Minimum first payment: ${currency(row.minimumPayment)}` : 'Choose any amount up to the remaining balance.'}</small></div> : <button type="button" className="primary-button patient-bills__pay" onClick={() => void pay(row)} disabled={payingId !== null}>{payingId === row.id ? 'Opening…' : row.kind === 'medical' ? `Pay ${currency(row.total)} once` : `Pay ${currency(row.balance)}`}</button>)}</td>
             </tr>)}</tbody>
           </table></div>
         )}

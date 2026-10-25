@@ -1,7 +1,8 @@
-import { type FormEvent, useState } from 'react'
+import { type FormEvent, useEffect, useState } from 'react'
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
 import { getRoleEntryPoint } from '../config/roleExperience'
+import { authApi } from '../api/authApi'
 
 /**
  * Login page.
@@ -30,11 +31,30 @@ export default function LoginPage() {
 
   const [email, setEmail] = useState(() => new URLSearchParams(location.search).get('email') ?? '')
   const [password, setPassword] = useState('')
-  const [domain, setDomain] = useState(() => new URLSearchParams(location.search).get('domain') ?? import.meta.env.VITE_DEV_TENANT_DOMAIN ?? '')
+  // Tenant selection follows the current clinic host. Keep explicit URL and
+  // local development overrides for existing tenant-specific login links.
+  const domainOverride = new URLSearchParams(location.search).get('domain')?.trim()
+    || import.meta.env.VITE_DEV_TENANT_DOMAIN
+  const brandingDomain = domainOverride || window.location.hostname
+  const [tenantBranding, setTenantBranding] = useState<{ tenantName: string; logoUrl?: string | null } | null>(null)
+  const [tenantLogoFailed, setTenantLogoFailed] = useState(false)
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
 
   const isLoading = status === 'loading'
+
+  useEffect(() => {
+    if (typeof authApi.getTenantBranding !== 'function') return
+    let active = true
+    authApi.getTenantBranding(brandingDomain)
+      .then((branding) => {
+        if (active) setTenantBranding(branding)
+      })
+      .catch(() => {
+        if (active) setTenantBranding(null)
+      })
+    return () => { active = false }
+  }, [brandingDomain])
 
   if (status === 'idle') {
     return null
@@ -71,7 +91,7 @@ export default function LoginPage() {
     if (!validate()) return
 
     try {
-      await login({ email: email.trim(), password, domain: domain.trim() || undefined })
+      await login({ email: email.trim(), password, domain: domainOverride || undefined })
       navigate(redirectTarget(), { replace: true })
     } catch {
       setSubmitError('Invalid email or password. Please try again.')
@@ -80,11 +100,33 @@ export default function LoginPage() {
 
   return (
     <div className="login-page">
-      <div className="login-card" role="main">
-        <div className="login-card__brand" aria-hidden="true">✦</div>
-        <h1 className="login-card__title">iDEAL Care</h1>
-        <p className="login-card__subtitle">Sign in to your account</p>
-        {passwordChanged && <div className="notice notice--success" role="status">Password updated. Sign in with your new password.</div>}
+      <main className="login-card">
+        <section className="login-welcome" aria-label="About iDEAL Care">
+          <div className="login-welcome__brand">
+            {tenantBranding?.logoUrl && !tenantLogoFailed
+              ? <img className="login-welcome__tenant-logo" src={tenantBranding.logoUrl} alt="" onError={() => setTenantLogoFailed(true)} />
+              : <span className="login-welcome__mark" aria-hidden="true">✦</span>}
+            <span>{tenantBranding?.tenantName || 'iDEAL Care'}</span>
+          </div>
+          <div className="login-welcome__message">
+            <p className="login-welcome__eyebrow">CARE, CONNECTED</p>
+            <h1>Better care starts with being connected.</h1>
+            <p className="login-welcome__copy">A trusted place to manage your care and stay connected with your health team.</p>
+          </div>
+          <div className="login-welcome__assurance">
+            <span className="login-welcome__assurance-icon" aria-hidden="true">✓</span>
+            <span>Your care information, in one secure place</span>
+          </div>
+          <span className="login-welcome__cross" aria-hidden="true">+</span>
+        </section>
+
+        <section className="login-panel" aria-labelledby="login-title">
+          <div className="login-panel__heading">
+            <p className="login-panel__eyebrow">WELCOME BACK</p>
+            <h2 id="login-title" className="login-card__title">Sign in to your account</h2>
+            <p className="login-card__subtitle">Enter your details to continue to your care portal.</p>
+          </div>
+          {passwordChanged && <div className="notice notice--success" role="status">Password updated. Sign in with your new password.</div>}
 
         <form
           className="login-form"
@@ -93,22 +135,6 @@ export default function LoginPage() {
           aria-label="Sign in form"
         >
           {/* ── Clinic Domain ─────────────────────────────────── */}
-          <div className="form-field">
-            <label className="form-label" htmlFor="domain">
-              Clinic Domain
-            </label>
-            <input
-              id="domain"
-              type="text"
-              className="form-input"
-              value={domain}
-              onChange={(e) => setDomain(e.target.value)}
-              placeholder="e.g. yourclinic.idealcare.ng"
-              disabled={isLoading}
-              autoComplete="off"
-            />
-          </div>
-
           {/* ── Email ──────────────────────────────────────── */}
           <div className="form-field">
             <label className="form-label" htmlFor="email">
@@ -174,13 +200,16 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '14px', color: 'var(--text)' }}>
-          <span>New patient? </span>
-          <Link to="/register" style={{ color: 'var(--accent)', fontWeight: 500, textDecoration: 'underline' }}>
-            Register for care here
+          <div className="login-register">
+            <span className="login-register__prompt">New to iDEAL Care?</span>
+            <Link to="/register" className="login-register__link">
+              Register as a patient <span aria-hidden="true">→</span>
           </Link>
-        </div>
-      </div>
+            <p>Create your patient account to get started.</p>
+            <p>Supporting a patient? <Link to="/guardian/register" className="login-register__link">Register as a guardian</Link></p>
+          </div>
+        </section>
+      </main>
     </div>
   )
 }
