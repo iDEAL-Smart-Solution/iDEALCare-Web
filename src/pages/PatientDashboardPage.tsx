@@ -113,13 +113,17 @@ export default function PatientDashboardPage() {
         <article className="patient-dashboard__card">
           <span className="patient-dashboard__card-label">Patient details</span>
           <strong>{patient.careLocationType === 2 ? 'Home care' : 'Clinic / facility care'}</strong>
-          <span>DOB: {new Date(patient.dateOfBirth).toLocaleDateString()}</span>
+          <span>DOB: {patient.dateOfBirth ? new Date(patient.dateOfBirth).toLocaleDateString() : 'Not provided'} · Age {patient.age}</span>
         </article>
       </section>
 
+      <nav className="dashboard-quick-links" aria-label="Patient shortcuts">
+        <Link to="/app/patient/appointments">Appointments</Link><Link to="/app/messages">Messages</Link><Link to="/app/patient/documents">Medical documents</Link><Link to="/app/patient/home-care">Home-care requests</Link>
+      </nav>
+
       <section className="patient-dashboard__panel">
         <div className="patient-dashboard__panel-heading">
-          <div><span className="eyebrow">Care activity</span><h3>Recent care updates</h3></div>
+          <div><span className="eyebrow">Care activity</span><h3>Recent care updates</h3></div><Link to="/app/care-records">Open care history →</Link>
         </div>
         {recentRecords.length ? <ul className="patient-dashboard__updates">
           {recentRecords.map((record) => <li key={record.id}>

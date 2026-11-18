@@ -25,6 +25,9 @@ import type {
 } from '../types/guardian'
 
 export const patientApi = {
+  async registrationCapacity(domain: string) {
+    return (await apiClient.get<{ remainingSlots: number; isFull: boolean }>('/api/patients/registration-capacity', { params: { domain } })).data
+  },
   async registerAccount(request: RegisterPatientAccountRequest) {
     const response = await apiClient.post<PatientRegistrationResponse>(
       '/api/patients/register-account',
@@ -165,8 +168,8 @@ export const patientApi = {
     return response.data
   },
 
-  async admit(patientId: string) {
-    const response = await apiClient.post<{ admissionId: string }>(`/api/patients/${patientId}/admit`)
+  async admit(patientId: string, bedId?: string) {
+    const response = await apiClient.post<{ admissionId: string; bedId?: string | null }>(`/api/patients/${patientId}/admit`, undefined, { params: bedId ? { bedId } : undefined })
     return response.data
   },
 

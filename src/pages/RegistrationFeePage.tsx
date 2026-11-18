@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import { patientApi } from '../api/patientApi'
+import { useAuthStore } from '../stores/authStore'
 import type { PatientDto, RegistrationInvoiceDto } from '../types/patient'
 
 const statusLabels: Record<number, string> = {
@@ -19,6 +20,7 @@ const statusLabels: Record<number, string> = {
 export default function RegistrationFeePage() {
   const navigate = useNavigate()
   const location = useLocation()
+  const tenantDomain = useAuthStore((state) => state.tenant?.domain)
 
   const [patient, setPatient] = useState<PatientDto | null>(null)
   const [invoices, setInvoices] = useState<RegistrationInvoiceDto[]>([])
@@ -28,6 +30,7 @@ export default function RegistrationFeePage() {
   const [payError, setPayError] = useState<string | null>(null)
   const [paySuccess, setPaySuccess] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
+  const [capacityFull, setCapacityFull] = useState(false)
 
   async function loadData() {
     setLoading(true)
@@ -35,6 +38,10 @@ export default function RegistrationFeePage() {
     try {
       const me = await patientApi.getMe()
       setPatient(me)
+      if (tenantDomain) {
+        try { setCapacityFull((await patientApi.registrationCapacity(tenantDomain)).isFull) }
+        catch { setCapacityFull(false) }
+      }
 
       if (me?.id) {
         try {
@@ -100,6 +107,17 @@ export default function RegistrationFeePage() {
       loadData()
     }
   }, [location.search])
+
+  useEffect(() => {
+    let active = true
+    const domain = tenantDomain?.trim() || window.location.hostname
+    const refreshCapacity = () => patientApi.registrationCapacity(domain)
+      .then((capacity) => { if (active) setCapacityFull(capacity.isFull) })
+      .catch(() => { if (active) setCapacityFull(false) })
+    void refreshCapacity()
+    const timer = window.setInterval(() => { if (document.visibilityState === 'visible') void refreshCapacity() }, 15000)
+    return () => { active = false; window.clearInterval(timer) }
+  }, [tenantDomain])
 
   async function handlePay(invoice: RegistrationInvoiceDto) {
     if (!patient) return
@@ -232,7 +250,7 @@ export default function RegistrationFeePage() {
                   {patient.firstName} {patient.lastName}
                 </h3>
                 <span className="patient-meta">
-                  DOB: {patient.dateOfBirth} · Care Location:{' '}
+                  Age: {patient.age}{patient.dateOfBirth ? ` · DOB: ${patient.dateOfBirth}` : ''} · Care Location:{' '}
                   {patient.careLocationType === 2 ? 'Home Care' : 'Clinic / Facility'}
                 </span>
               </div>
@@ -296,13 +314,17 @@ export default function RegistrationFeePage() {
                   </div>
                 </div>
 
+                {capacityFull && <div className="notice notice--error" role="alert">The clinic has filled its registration capacity. Do not attempt to pay. The clinic has been notified and will contact you about next steps.</div>}
+
                 {payError && (
                   <div className="notice notice--error" role="alert" style={{ margin: '14px 0' }}>
                     {payError}
                   </div>
                 )}
 
-                {regInvoice ? (
+                {regInvoice ? regInvoice.status === 5 ? (
+                  <div className="notice notice--error" role="alert">This registration invoice has been closed because the clinic has no remaining capacity. Do not attempt to pay. Contact the clinic for further information.</div>
+                ) : (
                   <div className="invoice-summary">
                     <div className="invoice-row">
                       <span>Fee Description:</span>
@@ -327,7 +349,7 @@ export default function RegistrationFeePage() {
                       type="button"
                       className="primary-button btn-pay"
                       onClick={() => handlePay(regInvoice)}
-                      disabled={paying}
+                      disabled={paying || capacityFull}
                     >
                       {paying ? 'Connecting to Paystack…' : `Pay ₦${regInvoice.outstandingAmount.toLocaleString()}`}
                     </button>

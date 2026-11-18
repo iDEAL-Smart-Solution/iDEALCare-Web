@@ -180,6 +180,177 @@ code {
   background: var(--accent-bg);
 }
 
+/* Tenant care configuration */
+.tenant-configuration {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  min-width: 0;
+}
+
+.tenant-configuration__tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  padding: 5px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--code-bg);
+  overflow-x: auto;
+}
+
+.tenant-configuration__tab {
+  flex: 0 0 auto;
+  min-height: 42px;
+  padding: 9px 16px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.3;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tenant-configuration__tab:hover {
+  background: var(--accent-bg);
+  color: var(--text-h);
+}
+
+.tenant-configuration__tab--active,
+.tenant-configuration__tab--active:hover {
+  background: var(--bg);
+  border-color: var(--border);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.tenant-configuration__layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 20px;
+  min-width: 0;
+}
+
+.tenant-configuration__form,
+.tenant-configuration__list > * {
+  min-width: 0;
+  padding: 24px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--bg);
+}
+
+.tenant-configuration__form h3,
+.tenant-service-card h3,
+.tenant-question-card h3 {
+  margin: 0 0 8px;
+  color: var(--text-h);
+  font-size: 19px;
+  line-height: 1.35;
+}
+
+.tenant-configuration__form > .muted {
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.tenant-configuration__form .form-field {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0;
+  color: var(--text-h);
+  font-size: 14px;
+}
+
+.tenant-configuration__form .form-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg);
+  color: var(--text-h);
+  font: inherit;
+  font-size: 15px;
+}
+
+.tenant-configuration__form .form-textarea {
+  min-height: 92px;
+  resize: vertical;
+}
+
+.tenant-configuration__checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  margin: 16px 0;
+}
+
+.tenant-configuration__checks label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text);
+  font-size: 14px;
+}
+
+.tenant-configuration__list {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.tenant-service-card,
+.tenant-question-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.tenant-service-card p,
+.tenant-question-card p {
+  margin: 6px 0;
+  font-size: 14px;
+}
+
+.tenant-service-card__metadata {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 12px;
+  color: var(--text);
+  font-size: 13px;
+}
+
+@media (max-width: 900px) {
+  .tenant-configuration__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .tenant-configuration__tabs {
+    width: 100%;
+  }
+
+  .tenant-configuration__tab {
+    padding-inline: 11px;
+    font-size: 13px;
+  }
+
+  .tenant-configuration__form,
+  .tenant-configuration__list > * {
+    padding: 16px;
+  }
+}
+
 .sub-banner__action:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
@@ -2616,6 +2787,9 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .patient-dashboard__bill-summary strong { color: #c084fc; }
 .patient-bills__registration { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 15px 18px; border: 1px solid rgba(59,130,246,.25); border-radius: 12px; background: rgba(59,130,246,.08); }
 .patient-bills__registration p { margin: 5px 0 0; color: var(--text); }
+.dashboard-quick-links { display: flex; flex-wrap: wrap; gap: 10px; }
+.dashboard-quick-links a { display: inline-flex; align-items: center; min-height: 40px; padding: 8px 14px; border: 1px solid var(--border); border-radius: 10px; background: var(--surface, var(--code-bg)); color: var(--text); font-size: .9rem; font-weight: 600; text-decoration: none; }
+.dashboard-quick-links a:hover { border-color: var(--primary); color: var(--primary); }
 .patient-bills__registration--warning { border-color: rgba(239,68,68,.3); background: rgba(239,68,68,.08); }
 .patient-bills__totals { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 14px; }
 .patient-bills__totals article { display: flex; flex-direction: column; gap: 8px; padding: 18px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface, var(--code-bg)); }
@@ -2679,6 +2853,39 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 .patient-care-timeline li > div { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
 .patient-care-timeline time { color: var(--muted); font-size: .82rem; }
 .patient-care-timeline p { margin: 7px 0 0; white-space: pre-wrap; color: var(--text); }
+.care-record-history { display: grid; gap: 18px; width: 100%; }
+.care-record-history__header h1 { margin: 3px 0 6px; color: var(--text); font-size: 1.75rem; }
+.care-record-history__header p:last-child { margin: 0; }
+.care-record-filters { display: grid; grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(125px, 1fr)) auto; gap: 12px; align-items: end; padding: 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface, var(--code-bg)); }
+.care-record-filters .form-field { margin: 0; }
+.care-record-filters__search { min-width: 0; }
+.care-record-patient-select { display: grid; gap: 7px; max-width: 460px; color: var(--text); font-size: .88rem; font-weight: 600; }
+.care-record-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.care-record-summary article { display: grid; gap: 7px; padding: 15px 17px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface, var(--code-bg)); }
+.care-record-summary span { color: var(--muted); font-size: .78rem; text-transform: uppercase; letter-spacing: .04em; }
+.care-record-summary strong { color: var(--text); font-size: 1.3rem; }
+.care-record-timeline { display: grid; gap: 17px; }
+.care-record-timeline__day { padding: 18px; border: 1px solid var(--border); border-radius: 14px; background: var(--surface, var(--code-bg)); }
+.care-record-timeline__day h2 { margin: 0 0 8px; color: var(--text); font-size: 1rem; }
+.care-record-timeline__day ol { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.care-record-entry { position: relative; padding: 15px 17px; border: 1px solid var(--border); border-left: 4px solid #64748b; border-radius: 10px; background: var(--surface-sunken, rgba(15,23,42,.025)); }
+.care-record-entry--condition { border-left-color: #f59e0b; }
+.care-record-entry--vitals { border-left-color: #38bdf8; }
+.care-record-entry__top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.care-record-entry__type { display: flex; align-items: center; gap: 9px; color: var(--text); font-weight: 700; }
+.care-record-entry__top time { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+.care-record-entry__meta { margin: 8px 0 0; color: var(--muted); font-size: .82rem; }
+.care-record-entry__meta strong { color: var(--text); }
+.care-record-entry__content { margin: 10px 0 0; color: var(--text); line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.care-record-entry__admission { display: inline-block; margin-top: 11px; color: var(--muted); font-size: .72rem; }
+.care-record-entry__correction { padding: 3px 7px; border-radius: 999px; background: rgba(245,158,11,.13); color: #b45309; font-size: .68rem; font-weight: 700; text-transform: uppercase; }
+.care-record-empty { padding: 28px; border: 1px dashed var(--border); border-radius: 14px; text-align: center; }
+.care-record-empty h2 { margin: 0 0 7px; color: var(--text); font-size: 1.05rem; }
+.care-record-empty p { margin: 0; color: var(--muted); }
+.care-record-pagination { display: flex; justify-content: space-between; align-items: center; gap: 12px; color: var(--muted); font-size: .88rem; }
+.care-record-pagination > div { display: flex; gap: 8px; }
+@media (max-width: 900px) { .care-record-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .care-record-filters__search { grid-column: 1 / -1; } }
+@media (max-width: 560px) { .care-record-filters { grid-template-columns: minmax(0, 1fr); } .care-record-filters__search { grid-column: auto; } .care-record-summary { grid-template-columns: minmax(0, 1fr); } .care-record-pagination { align-items: flex-start; flex-direction: column; } .care-record-entry__top { align-items: flex-start; flex-direction: column; gap: 4px; } }
 @media (max-width: 640px) { .patient-care-heading { flex-direction: column; } }
 
 .billing-admin-page { display: grid; gap: 20px; }
@@ -2862,5 +3069,85 @@ button:disabled { opacity: .55; cursor: not-allowed; }
 @media (max-width: 440px) {
   .register-grid { grid-template-columns: minmax(0, 1fr); }
 }
+
+.scheduling-page { display: grid; gap: 20px; }
+.scheduling-page__patient { width: min(100%, 460px); }
+.scheduling-page__form { display: grid; gap: 18px; }
+.scheduling-page__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.scheduling-page__wide { grid-column: 1 / -1; }
+.scheduling-page__booking .patient-dashboard__panel-heading select { max-width: 240px; }
+.scheduling-page__location { margin-top: 18px; max-width: 460px; }
+.scheduling-page__appointment { display: grid; gap: 4px; }
+.scheduling-page__actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.scheduling-page__actions select { min-width: 140px; }
+.scheduling-page__status { display: inline-flex; align-items: center; padding: 5px 9px; border-radius: 999px; background: var(--surface, var(--code-bg)); color: var(--text); font-size: .78rem; white-space: nowrap; }
+.scheduling-page__status--1, .scheduling-page__status--2 { background: color-mix(in srgb, #1c9b72 15%, transparent); color: #73d9b7; }
+.scheduling-page__status--3 { background: color-mix(in srgb, #64748b 18%, transparent); color: #bac4d4; }
+.scheduling-page__status--4, .scheduling-page__status--6 { background: color-mix(in srgb, #df6565 15%, transparent); color: #ffaaaa; }
+.scheduling-page__status--5 { background: color-mix(in srgb, #d6a93e 16%, transparent); color: #e8c875; }
+.scheduling-page__count { display: inline-flex; min-width: 24px; height: 24px; align-items: center; justify-content: center; margin-left: 5px; border-radius: 50%; background: var(--surface, var(--code-bg)); font-size: .76rem; }
+@media (max-width: 800px) { .scheduling-page__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 540px) { .scheduling-page__fields { grid-template-columns: minmax(0, 1fr); } .scheduling-page__wide { grid-column: auto; } .scheduling-page__actions { align-items: flex-start; flex-direction: column; } .scheduling-page__booking .patient-dashboard__panel-heading select { max-width: none; } }
+
+.messages-page { display: grid; gap: 20px; }
+.messages-page__compose { display: grid; gap: 14px; }
+.messages-page__layout { display: grid; grid-template-columns: minmax(260px, .75fr) minmax(0, 1.7fr); align-items: start; gap: 18px; }
+.messages-page__threads ul { display: grid; gap: 7px; margin: 12px 0 0; padding: 0; list-style: none; }
+.messages-page__thread { display: grid; width: 100%; gap: 5px; padding: 12px; border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text); text-align: left; cursor: pointer; }
+.messages-page__thread strong { color: var(--text-h); }
+.messages-page__thread span, .messages-page__thread time { overflow: hidden; color: var(--muted); font-size: .82rem; text-overflow: ellipsis; white-space: nowrap; }
+.messages-page__thread--active { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 9%, transparent); }
+.messages-page__conversation { min-height: 460px; display: grid; grid-template-rows: auto 1fr auto; gap: 14px; }
+.messages-page__history { display: flex; flex-direction: column; gap: 10px; max-height: 560px; overflow: auto; margin: 0; padding: 4px; list-style: none; }
+.messages-page__message { align-self: flex-start; max-width: min(88%, 680px); padding: 11px 13px; border: 1px solid var(--border); border-radius: 12px 12px 12px 3px; background: var(--surface, var(--code-bg)); }
+.messages-page__message--mine { align-self: flex-end; border-color: color-mix(in srgb, var(--accent) 35%, var(--border)); background: color-mix(in srgb, var(--accent) 12%, var(--surface, var(--code-bg))); border-radius: 12px 12px 3px 12px; }
+.messages-page__message span { color: var(--text-h); font-size: .78rem; font-weight: 650; }
+.messages-page__message p { margin: 5px 0; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.messages-page__message time { color: var(--muted); font-size: .74rem; }
+.messages-page__reply { display: grid; gap: 10px; }
+.messages-page__reply .primary-button { justify-self: end; }
+.messages-page__empty { align-self: center; justify-self: center; padding: 40px 18px; color: var(--muted); text-align: center; }
+.messages-page__empty > span { font-size: 2rem; }
+.messages-page__empty h3 { color: var(--text-h); }
+@media (max-width: 760px) { .messages-page__layout { grid-template-columns: minmax(0, 1fr); } .messages-page__conversation { min-height: 400px; } }
+
+.patient-documents-page { display: grid; gap: 20px; }
+.medical-documents { display: grid; gap: 14px; }
+.medical-documents__upload { display: grid; grid-template-columns: minmax(180px, .7fr) minmax(240px, 1.3fr) minmax(200px, 1fr) auto; align-items: end; gap: 12px; padding: 14px; border: 1px solid var(--border); border-radius: 12px; }
+.medical-documents__actions { display: flex; align-items: center; gap: 10px; }
+.medical-documents__actions a { color: var(--accent); }
+@media (max-width: 900px) { .medical-documents__upload { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .medical-documents__upload { grid-template-columns: minmax(0, 1fr); } .medical-documents__upload > button { width: 100%; } }
+
+.care-operations-page, .facility-page { display: grid; gap: 20px; }
+.care-operations__cards, .facility-page__list { display: grid; gap: 16px; }
+.home-care-card { display: grid; gap: 16px; }
+.home-care-card > header, .facility-card > header { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.home-care-card h3, .facility-card h3 { margin: 8px 0 4px; color: var(--text-h); }
+.home-care-card > header p, .facility-card > header p, .facility-room__header p { margin: 0; color: var(--muted); }
+.home-care-card > header time { color: var(--muted); white-space: nowrap; }
+.home-care-card__status, .facility-card__state { display: inline-flex; padding: 4px 9px; border-radius: 999px; background: var(--surface, var(--code-bg)); color: var(--muted); font-size: .76rem; }
+.home-care-card__status--3, .home-care-card__status--4, .home-care-card__status--5, .home-care-card__status--6, .facility-card__state--active { background: color-mix(in srgb, #1c9b72 15%, transparent); color: #73d9b7; }
+.home-care-card__status--7 { background: color-mix(in srgb, #df6565 15%, transparent); color: #ffaaaa; }
+.home-care-card__metrics { display: grid; grid-template-columns: minmax(140px, .6fr) minmax(160px, .8fr) minmax(240px, 1.6fr); gap: 12px; }
+.home-care-card__actions, .facility-card__add-room, .facility-room__add-bed { display: flex; align-items: end; gap: 12px; flex-wrap: wrap; }
+.home-care-card__actions .form-field, .facility-card__add-room .form-field, .facility-room__add-bed .form-field { min-width: 190px; }
+.home-care-card__notes { grid-column: auto; }
+.facility-page__form { display: grid; gap: 16px; }
+.facility-page__fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.facility-card { display: grid; gap: 16px; }
+.facility-card__counts { color: var(--muted); white-space: nowrap; }
+.facility-card__rooms { display: grid; gap: 12px; }
+.facility-room { padding: 14px; border: 1px solid var(--border); border-radius: 11px; }
+.facility-room__header { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.facility-room__header h4 { margin: 0 0 4px; color: var(--text-h); }
+.facility-room__header > span { color: var(--muted); font-size: .8rem; }
+.facility-room__beds { display: grid; gap: 6px; margin: 12px 0; padding: 0; list-style: none; }
+.facility-room__beds li { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--border); }
+.facility-room__beds li > div { display: grid; gap: 4px; }
+.facility-room__beds li > div span { color: var(--muted); font-size: .82rem; }
+.facility-room__beds .form-field { min-width: 145px; }
+@media (max-width: 850px) { .home-care-card__metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } .home-care-card__notes { grid-column: 1 / -1; } .facility-page__fields { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .home-care-card__metrics, .facility-page__fields { grid-template-columns: minmax(0, 1fr); } .home-care-card__notes { grid-column: auto; } .home-care-card__actions { align-items: stretch; flex-direction: column; } .home-care-card__actions .form-field { min-width: 0; } .facility-card > header { flex-direction: column; } .facility-room__beds li { align-items: flex-start; flex-direction: column; } .facility-room__beds .form-field { width: 100%; } }
 
 
