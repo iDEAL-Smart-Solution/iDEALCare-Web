@@ -25,6 +25,14 @@ import GuardianDashboardPage from './pages/GuardianDashboardPage'
 import GuardianRegisterPage from './pages/GuardianRegisterPage'
 import GuardianManagementPage from './pages/GuardianManagementPage'
 import PatientGuardianAccessPage from './pages/PatientGuardianAccessPage'
+import SchedulingPage from './pages/SchedulingPage'
+import MessagesPage from './pages/MessagesPage'
+import PatientDocumentsPage from './pages/PatientDocumentsPage'
+import HomeCareOperationsPage from './pages/HomeCareOperationsPage'
+import FacilityManagementPage from './pages/FacilityManagementPage'
+import TenantConfigurationPage from './pages/TenantConfigurationPage'
+import PatientHomeCarePage from './pages/PatientHomeCarePage'
+import CareRecordsPage from './pages/CareRecordsPage'
 
 function RoleRoute({ allowedRoles, children }: { allowedRoles: string[]; children: ReactNode }) {
   const role = useAuthStore((s) => s.tenant?.tenant_role?.toLowerCase())
@@ -86,10 +94,22 @@ export default function App() {
           <Route path="/app/team/dashboard" element={<RoleRoute allowedRoles={['nurse', 'staff']}><TeamDashboardEntry /></RoleRoute>} />
           <Route path="/app/patient/dashboard" element={<RoleRoute allowedRoles={['patient']}><PatientDashboardPage /></RoleRoute>} />
           <Route path="/app/patient/guardians" element={<RoleRoute allowedRoles={['patient']}><PatientGuardianAccessPage /></RoleRoute>} />
+          <Route path="/app/patient/appointments" element={<RoleRoute allowedRoles={['patient']}><SchedulingPage /></RoleRoute>} />
+          <Route path="/app/patient/messages" element={<RoleRoute allowedRoles={['patient']}><MessagesPage /></RoleRoute>} />
+          <Route path="/app/patient/documents" element={<RoleRoute allowedRoles={['patient']}><PatientDocumentsPage /></RoleRoute>} />
+          <Route path="/app/patient/home-care" element={<RoleRoute allowedRoles={['patient']}><PatientHomeCarePage /></RoleRoute>} />
           <Route path="/app/guardian/dashboard" element={<RoleRoute allowedRoles={['guardian']}><GuardianDashboardPage /></RoleRoute>} />
+          <Route path="/app/care-records" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff', 'patient', 'guardian']}><CareRecordsPage /></RoleRoute>} />
+          <Route path="/app/guardian/appointments" element={<RoleRoute allowedRoles={['guardian']}><SchedulingPage /></RoleRoute>} />
+          <Route path="/app/guardian/messages" element={<RoleRoute allowedRoles={['guardian']}><MessagesPage /></RoleRoute>} />
           <Route path="/app/dashboard" element={<RoleEntryRedirect />} />
           <Route path="/app/subscription" element={<RoleRoute allowedRoles={['owner', 'admin']}><SubscriptionPage /></RoleRoute>} />
           <Route path="/app/staff" element={<RoleRoute allowedRoles={['owner', 'admin']}><StaffManagementPage /></RoleRoute>} />
+          <Route path="/app/schedule" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><SchedulingPage /></RoleRoute>} />
+          <Route path="/app/messages" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><MessagesPage /></RoleRoute>} />
+          <Route path="/app/home-care" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><HomeCareOperationsPage /></RoleRoute>} />
+          <Route path="/app/facilities" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><FacilityManagementPage /></RoleRoute>} />
+          <Route path="/app/configuration" element={<RoleRoute allowedRoles={['owner', 'admin']}><TenantConfigurationPage /></RoleRoute>} />
           <Route path="/app/guardians" element={<RoleRoute allowedRoles={['owner', 'admin']}><GuardianManagementPage /></RoleRoute>} />
           <Route path="/app/billing" element={<RoleRoute allowedRoles={['owner', 'admin']}><BillingManagementPage /></RoleRoute>} />
           <Route path="/app/patients" element={<RoleRoute allowedRoles={['owner', 'admin', 'nurse', 'staff']}><PatientsPage /></RoleRoute>} />

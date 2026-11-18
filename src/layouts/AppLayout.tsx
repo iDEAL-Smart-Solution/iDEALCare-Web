@@ -13,10 +13,10 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const refreshNotifications = useNotificationStore((s) => s.refresh)
   const clearNotifications = useNotificationStore((s) => s.clear)
-  const isPatient = tenant?.tenant_role?.toLowerCase() === 'patient'
+  const canReceiveNotifications = Boolean(tenant?.tenant_role)
 
   useEffect(() => {
-    if (!isPatient) {
+    if (!canReceiveNotifications) {
       clearNotifications()
       return
     }
@@ -33,7 +33,7 @@ export default function AppLayout() {
       window.removeEventListener('focus', refreshWhenVisible)
       document.removeEventListener('visibilitychange', refreshWhenVisible)
     }
-  }, [isPatient, user?.id, clearNotifications, refreshNotifications])
+  }, [canReceiveNotifications, user?.id, clearNotifications, refreshNotifications])
 
   function handleLogout() {
     logout()
@@ -99,7 +99,7 @@ export default function AppLayout() {
         <header className="app-header" role="banner">
           <h1 className="app-header__title">{tenantDisplayName}</h1>
           <div className="app-header__actions">
-            {isPatient && <PatientNotificationsPopover />}
+            {canReceiveNotifications && <PatientNotificationsPopover />}
             <div className="app-header__user">
             {tenant ? (
               <span>

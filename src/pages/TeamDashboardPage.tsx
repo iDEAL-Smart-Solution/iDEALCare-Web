@@ -54,6 +54,10 @@ export default function TeamDashboardPage({ role }: { role: TeamRole }) {
       </button>
     </header>
 
+    <nav className="dashboard-quick-links" aria-label="Care team shortcuts">
+      <Link to="/app/care-records">Assigned patient care records</Link><Link to="/app/schedule">Schedule</Link><Link to="/app/messages">Messages</Link><Link to="/app/home-care">Home-care operations</Link>
+    </nav>
+
     {error && <div className="notice notice--error" role="alert">{error}</div>}
     <section className="dashboard-card" aria-label="Assigned patients">
       <div className="dashboard-card__header">

@@ -5,7 +5,7 @@ import { patientApi } from '../api/patientApi'
 import { careServiceApi } from '../api/careServiceApi'
 import { getTenantDomain } from '../api/authApi'
 import { useAuthStore } from '../stores/authStore'
-import type { CareLocationType, RegisterPatientAccountRequest, Sex } from '../types/patient'
+import type { CareLocationType, MaritalStatus, RegisterPatientAccountRequest, Sex } from '../types/patient'
 import type { CareServiceCatalogItem } from '../types/careService'
 
 export default function RegisterPage() {
@@ -20,11 +20,16 @@ export default function RegisterPage() {
   const [middleName, setMiddleName] = useState('')
   const [lastName, setLastName] = useState('')
   const [dateOfBirth, setDateOfBirth] = useState('')
+  const [age, setAge] = useState('')
   const [sex, setSex] = useState<Sex>(1)
+  const [maritalStatus, setMaritalStatus] = useState<MaritalStatus>(7)
+  const [occupation, setOccupation] = useState('')
+  const [religion, setReligion] = useState('')
   const [careLocationType, setCareLocationType] = useState<CareLocationType>(1)
   const [requestedServiceId, setRequestedServiceId] = useState<string>('')
   const [phoneNumber, setPhoneNumber] = useState('')
   const [address, setAddress] = useState('')
+  const [nextOfKinAddress, setNextOfKinAddress] = useState('')
   const [city, setCity] = useState('')
   const [state, setState] = useState('')
   const [country, setCountry] = useState('')
@@ -41,6 +46,7 @@ export default function RegisterPage() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({})
   const [submitError, setSubmitError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [remainingSlots, setRemainingSlots] = useState<number | null>(null)
 
   // Try to load care service catalog for preview if user/tenant has access
   useEffect(() => {
@@ -64,6 +70,17 @@ export default function RegisterPage() {
     }
   }, [domain])
 
+  useEffect(() => {
+    let active = true
+    if (!domain.trim()) return () => { active = false }
+    const refresh = () => patientApi.registrationCapacity(domain.trim()).then((capacity) => { if (active) setRemainingSlots(capacity.remainingSlots) }).catch(() => { if (active) setRemainingSlots(null) })
+    const refreshOnFocus = () => { if (document.visibilityState === 'visible') void refresh() }
+    void refresh()
+    const timer = window.setInterval(() => { void refresh() }, 15000)
+    document.addEventListener('visibilitychange', refreshOnFocus)
+    return () => { active = false; window.clearInterval(timer); document.removeEventListener('visibilitychange', refreshOnFocus) }
+  }, [domain])
+
   function validate(): boolean {
     const errors: Record<string, string> = {}
 
@@ -71,14 +88,20 @@ export default function RegisterPage() {
     if (!firstName.trim()) errors.firstName = 'First name is required.'
     if (!lastName.trim()) errors.lastName = 'Last name is required.'
 
-    if (!dateOfBirth) {
-      errors.dateOfBirth = 'Date of birth is required.'
-    } else {
+    if (!age.trim() || !Number.isInteger(Number(age)) || Number(age) < 0) errors.age = 'Enter a valid age (zero or greater).'
+    if (dateOfBirth) {
       const dobDate = new Date(`${dateOfBirth}T00:00:00`)
       if (dobDate >= new Date()) {
         errors.dateOfBirth = 'Date of birth must be in the past.'
       }
     }
+    if (!occupation.trim()) errors.occupation = 'Occupation is required.'
+    if (!religion.trim()) errors.religion = 'Religion is required.'
+    if (maritalStatus === 7) errors.maritalStatus = 'Marital status is required.'
+    if (!address.trim()) errors.address = 'Residential address is required.'
+    if (!nextOfKinFullName.trim()) errors.nextOfKinFullName = 'Next-of-kin name is required.'
+    if (!nextOfKinPhoneNumber.trim()) errors.nextOfKinPhoneNumber = 'Next-of-kin phone is required.'
+    if (!nextOfKinAddress.trim()) errors.nextOfKinAddress = 'Next-of-kin address is required.'
 
     if (!email.trim()) {
       errors.email = 'Email address is required.'
@@ -108,6 +131,10 @@ export default function RegisterPage() {
     setSubmitError(null)
 
     if (!validate()) return
+    if (remainingSlots === 0) {
+      setSubmitError('Registration is full. There are no spaces available at this clinic.')
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -119,8 +146,12 @@ export default function RegisterPage() {
         firstName: firstName.trim(),
         middleName: middleName.trim() || undefined,
         lastName: lastName.trim(),
-        dateOfBirth,
+        dateOfBirth: dateOfBirth || undefined,
+        age: Number(age),
         sex,
+        maritalStatus,
+        occupation: occupation.trim(),
+        religion: religion.trim(),
         careLocationType,
         requestedServiceId: requestedServiceId || undefined,
         phoneNumber: phoneNumber.trim() || undefined,
@@ -131,6 +162,7 @@ export default function RegisterPage() {
         nextOfKinFullName: nextOfKinFullName.trim() || undefined,
         nextOfKinRelationship: nextOfKinRelationship.trim() || undefined,
         nextOfKinPhoneNumber: nextOfKinPhoneNumber.trim() || undefined,
+        nextOfKinAddress: nextOfKinAddress.trim() || undefined,
         nextOfKinEmail: nextOfKinEmail.trim() || undefined,
       }
 
@@ -167,6 +199,7 @@ export default function RegisterPage() {
             {submitError}
           </div>
         )}
+        {remainingSlots !== null && <div className={remainingSlots === 0 ? 'notice notice--error' : 'notice notice--info'} role="status">{remainingSlots === 0 ? 'Registration is full. Please do not continue.' : `${remainingSlots} registration space${remainingSlots === 1 ? '' : 's'} remaining.`}</div>}
 
         <form className="register-form" onSubmit={handleSubmit} noValidate>
           {/* Personal Information */}
@@ -212,7 +245,7 @@ export default function RegisterPage() {
               </div>
 
               <div className="form-field">
-                <label className="form-label" htmlFor="reg-dob">Date of Birth *</label>
+                  <label className="form-label" htmlFor="reg-dob">Date of Birth (if known)</label>
                 <input
                   id="reg-dob"
                   type="date"
@@ -222,6 +255,12 @@ export default function RegisterPage() {
                   disabled={submitting}
                 />
                 {fieldErrors.dateOfBirth && <span className="form-error">{fieldErrors.dateOfBirth}</span>}
+              </div>
+
+              <div className="form-field">
+                <label className="form-label" htmlFor="reg-age">Age *</label>
+                <input id="reg-age" type="number" min="0" required className={`form-input${fieldErrors.age ? ' form-input--error' : ''}`} value={age} onChange={(e) => setAge(e.target.value)} disabled={submitting} />
+                {fieldErrors.age && <span className="form-error">{fieldErrors.age}</span>}
               </div>
 
               <div className="form-field">
@@ -239,6 +278,10 @@ export default function RegisterPage() {
                   <option value={4}>Prefer not to say</option>
                 </select>
               </div>
+
+              <label className="form-field"><span>Marital status *</span><select className="form-input" value={maritalStatus} onChange={(e) => setMaritalStatus(Number(e.target.value) as MaritalStatus)}><option value={7}>Select marital status</option><option value={1}>Single</option><option value={2}>Married</option><option value={3}>Divorced</option><option value={4}>Widowed</option><option value={5}>Separated</option><option value={6}>Other</option></select>{fieldErrors.maritalStatus && <span className="form-error">{fieldErrors.maritalStatus}</span>}</label>
+              <label className="form-field">Occupation *<input className="form-input" required value={occupation} onChange={(e) => setOccupation(e.target.value)} />{fieldErrors.occupation && <span className="form-error">{fieldErrors.occupation}</span>}</label>
+              <label className="form-field">Religion *<input className="form-input" required value={religion} onChange={(e) => setReligion(e.target.value)} />{fieldErrors.religion && <span className="form-error">{fieldErrors.religion}</span>}</label>
 
               <div className="form-field">
                 <label className="form-label" htmlFor="reg-location">Care Preference</label>
@@ -280,13 +323,14 @@ export default function RegisterPage() {
               <legend className="register-legend">Contact & Emergency Contact</legend>
               <div className="register-grid">
                 <label className="form-field">Phone number<input className="form-input" type="tel" autoComplete="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} /></label>
-                <label className="form-field">Address<input className="form-input" autoComplete="street-address" value={address} onChange={(e) => setAddress(e.target.value)} /></label>
+                <label className="form-field">Address *<input className="form-input" autoComplete="street-address" required value={address} onChange={(e) => setAddress(e.target.value)} />{fieldErrors.address && <span className="form-error">{fieldErrors.address}</span>}</label>
                 <label className="form-field">City<input className="form-input" autoComplete="address-level2" value={city} onChange={(e) => setCity(e.target.value)} /></label>
                 <label className="form-field">State / Province<input className="form-input" autoComplete="address-level1" value={state} onChange={(e) => setState(e.target.value)} /></label>
                 <label className="form-field">Country<input className="form-input" autoComplete="country-name" value={country} onChange={(e) => setCountry(e.target.value)} /></label>
-                <label className="form-field">Next of kin full name<input className="form-input" value={nextOfKinFullName} onChange={(e) => setNextOfKinFullName(e.target.value)} /></label>
+                <label className="form-field">Next of kin full name *<input className="form-input" required value={nextOfKinFullName} onChange={(e) => setNextOfKinFullName(e.target.value)} />{fieldErrors.nextOfKinFullName && <span className="form-error">{fieldErrors.nextOfKinFullName}</span>}</label>
                 <label className="form-field">Relationship<input className="form-input" value={nextOfKinRelationship} onChange={(e) => setNextOfKinRelationship(e.target.value)} /></label>
-                <label className="form-field">Next of kin phone<input className="form-input" type="tel" value={nextOfKinPhoneNumber} onChange={(e) => setNextOfKinPhoneNumber(e.target.value)} /></label>
+                <label className="form-field">Next of kin phone *<input className="form-input" type="tel" required value={nextOfKinPhoneNumber} onChange={(e) => setNextOfKinPhoneNumber(e.target.value)} />{fieldErrors.nextOfKinPhoneNumber && <span className="form-error">{fieldErrors.nextOfKinPhoneNumber}</span>}</label>
+                <label className="form-field">Next of kin address *<input className="form-input" required value={nextOfKinAddress} onChange={(e) => setNextOfKinAddress(e.target.value)} />{fieldErrors.nextOfKinAddress && <span className="form-error">{fieldErrors.nextOfKinAddress}</span>}</label>
                 <label className="form-field">Next of kin email<input className="form-input" type="email" value={nextOfKinEmail} onChange={(e) => setNextOfKinEmail(e.target.value)} /></label>
               </div>
           </fieldset>
@@ -351,7 +395,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             className="register-btn"
-            disabled={submitting}
+            disabled={submitting || remainingSlots === 0}
             aria-busy={submitting}
           >
             {submitting ? 'Submitting Registration…' : 'Complete Registration'}

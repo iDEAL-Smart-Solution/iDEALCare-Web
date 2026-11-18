@@ -20,9 +20,9 @@ export interface MessageDto {
   readAt?: string | null
 }
 export const communicationApi = {
-  async createConversation(patientId: string, subject: string, initialMessage: string) {
+  async createConversation(patientId: string, subject: string, initialMessage: string, participantUserIds?: string[]) {
     const response = await apiClient.post<ConversationDto>('/api/communication/conversations', {
-      patientId, subject, initialMessage,
+      patientId, subject, initialMessage, participantUserIds,
     })
     return response.data
   },
@@ -36,6 +36,10 @@ export const communicationApi = {
   },
   async send(conversationId: string, body: string) {
     const response = await apiClient.post<MessageDto>(`/api/communication/conversations/${conversationId}/messages`, { body })
+    return response.data
+  },
+  async markRead(messageId: string) {
+    const response = await apiClient.patch<MessageDto>(`/api/communication/messages/${messageId}/read`)
     return response.data
   },
 }

@@ -1,3 +1,4 @@
+import axios from 'axios'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuthStore } from '../stores/authStore'
@@ -21,7 +22,12 @@ export default function DashboardPage() {
     try {
       const summary = await dashboardApi.getOwnerSummary()
       setData(summary)
-    } catch {
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response?.status === 402) {
+        setData(null)
+        return
+      }
+
       setError('Failed to load dashboard metrics. Please check network connection.')
     } finally {
       setLoading(false)
@@ -115,6 +121,10 @@ export default function DashboardPage() {
           </Link>
         </div>
       </header>
+
+      <nav className="dashboard-quick-links" aria-label="Operations shortcuts">
+        <Link to="/app/configuration">Care setup</Link><Link to="/app/care-records">Care records</Link><Link to="/app/schedule">Schedule</Link><Link to="/app/messages">Messages</Link><Link to="/app/home-care">Home-care requests</Link><Link to="/app/facilities">Facilities and beds</Link>
+      </nav>
 
       {/* ── KPI Cards ───────────────────────────────────────────────────── */}
       <section className="owner-dashboard__kpi-grid" aria-label="Executive KPIs">

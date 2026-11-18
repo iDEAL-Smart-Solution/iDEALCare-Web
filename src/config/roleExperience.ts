@@ -15,13 +15,23 @@ export interface RoleExperience {
 const tenantManagementNavigation: readonly RoleNavigationItem[] = [
   { label: 'Dashboard', path: '/app/tenant/dashboard', icon: '▦' },
   { label: 'Patients', path: '/app/patients', icon: '👥' },
+  { label: 'Care records', path: '/app/care-records', icon: '▤' },
   { label: 'Care staff', path: '/app/staff', icon: '♙' },
-  { label: 'Schedule', icon: '◯', placeholder: true },
+  { label: 'Schedule', path: '/app/schedule', icon: '◷' },
+  { label: 'Messages', path: '/app/messages', icon: '✉' },
+  { label: 'Home care', path: '/app/home-care', icon: '⌂' },
+  { label: 'Facilities', path: '/app/facilities', icon: '▦' },
+  { label: 'Care setup', path: '/app/configuration', icon: '⚙' },
   { label: 'Billing', path: '/app/billing', icon: '◯' },
 ]
 
 const clinicalTeamNavigation: readonly RoleNavigationItem[] = [
   { label: 'Dashboard', path: '/app/team/dashboard', icon: '▦' },
+  { label: 'Care records', path: '/app/care-records', icon: '▤' },
+  { label: 'Schedule', path: '/app/schedule', icon: '◷' },
+  { label: 'Messages', path: '/app/messages', icon: '✉' },
+  { label: 'Home care', path: '/app/home-care', icon: '⌂' },
+  { label: 'Facilities', path: '/app/facilities', icon: '▦' },
 ]
 
 const guardianManagementNavigation: readonly RoleNavigationItem[] = [
@@ -39,6 +49,11 @@ export const roleExperiences: Record<TenantAppRole, RoleExperience> = {
     navigation: [
       { label: 'Guardian access', path: '/app/patient/guardians', icon: '♧' },
       { label: 'Dashboard', path: '/app/patient/dashboard', icon: '▦' },
+      { label: 'Care records', path: '/app/care-records', icon: '▤' },
+      { label: 'Appointments', path: '/app/patient/appointments', icon: '◷' },
+      { label: 'Messages', path: '/app/patient/messages', icon: '✉' },
+      { label: 'Medical documents', path: '/app/patient/documents', icon: '▤' },
+      { label: 'Home-care request', path: '/app/patient/home-care', icon: '⌂' },
       { label: 'Bills & Payments', path: '/app/bills', icon: '💳' },
     ],
   },
@@ -46,6 +61,9 @@ export const roleExperiences: Record<TenantAppRole, RoleExperience> = {
     entryPoint: '/app/guardian/dashboard',
     navigation: [
       { label: 'Dashboard', path: '/app/guardian/dashboard', icon: '▦' },
+      { label: 'Care records', path: '/app/care-records', icon: '▤' },
+      { label: 'Appointments', path: '/app/guardian/appointments', icon: '◷' },
+      { label: 'Messages', path: '/app/guardian/messages', icon: '✉' },
     ],
   },
 }

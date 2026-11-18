@@ -8,7 +8,7 @@ export interface PatientDto {
   firstName: string
   middleName?: string | null
   lastName: string
-  dateOfBirth: string
+  dateOfBirth?: string | null
   age: number
   sex: Sex
   maritalStatus?: MaritalStatus | null
@@ -44,7 +44,7 @@ export interface PatientDto {
 export interface PatientSummaryDto {
   id: string
   fullName: string
-  dateOfBirth: string
+  dateOfBirth?: string | null
   age: number
   sex: Sex
   status: PatientStatus
@@ -64,7 +64,8 @@ interface PatientProfileFields {
   firstName: string
   middleName?: string
   lastName: string
-  dateOfBirth: string
+  dateOfBirth?: string
+  age?: number
   sex: Sex
   maritalStatus?: MaritalStatus
   occupation?: string
@@ -93,13 +94,18 @@ interface PatientProfileFields {
 }
 
 export interface CreatePatientRequest extends PatientProfileFields {
-  dateOfBirth: string
+  dateOfBirth?: string
+  age?: number
   sex: Sex
   careLocationType: CareLocationType
 }
 
 export interface UpdatePatientRequest extends PatientProfileFields {
-  dateOfBirth: string
+  dateOfBirth?: string
+  age?: number
+  maritalStatus?: MaritalStatus
+  occupation?: string
+  religion?: string
   sex: Sex
   careLocationType: CareLocationType
 }
@@ -121,8 +127,12 @@ export interface RegisterPatientAccountRequest {
   firstName: string
   middleName?: string
   lastName: string
-  dateOfBirth: string
+  dateOfBirth?: string
+  age?: number
   sex: Sex
+  maritalStatus?: MaritalStatus
+  occupation?: string
+  religion?: string
   careLocationType: CareLocationType
   requestedServiceId?: string
   phoneNumber?: string
@@ -133,8 +143,9 @@ export interface RegisterPatientAccountRequest {
   nextOfKinFullName?: string
   nextOfKinRelationship?: string
   nextOfKinPhoneNumber?: string
-  nextOfKinEmail?: string
+  nextOfKinAlternativePhone?: string
   nextOfKinAddress?: string
+  nextOfKinEmail?: string
   nextOfKinCountry?: string
   nextOfKinIsEmergencyContact?: boolean
 }
@@ -183,9 +194,15 @@ export interface PatientAppointmentDto {
 
 export interface PatientCareRecordDto {
   id: string
+  patientId: string
+  patientName?: string | null
+  admissionId: string
+  recordedByUserId: string
+  recordedByName?: string | null
   recordType: number
   content: string
   recordedAt: string
+  correctsRecordId?: string | null
 }
 
 import type { LoginResponse } from './auth'
