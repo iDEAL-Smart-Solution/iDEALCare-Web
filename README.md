@@ -6,6 +6,8 @@ This frontend uses a layer-based structure that matches the existing application
 
 Authentication uses the single Axios client in `src/lib/apiClient.ts`. The API base URL is configured with `VITE_API_BASE_URL`; copy `.env.example` to `.env.local` for local values. Login sends the current hostname as `domain`, with `VITE_DEV_TENANT_DOMAIN` available only in Vite development mode.
 
+Production builds default to `https://care.api.idealsmartsolutions.com` via `.env.production`. Vite embeds this setting at build time; hosting environment variables and `.env.local` can override it, so rebuild and redeploy after changing it.
+
 The app follows the backend's one-tenant contract. Runtime context is represented by `tenant.tenant_id` and `tenant.tenant_role`, preserving the exact JWT claim names. The client uses these values for display and UX only; authorization remains server-enforced. Only the access token and expiry are persisted through `authStorage`.
 
 `ProtectedRoute` keeps protected content out of the render tree while auth is initializing or loading, redirects unauthenticated users to `/login`, and preserves the attempted location in router state. The Axios response interceptor centrally handles non-login 401 responses by clearing auth and navigating to login; 403 responses pass through unchanged.
