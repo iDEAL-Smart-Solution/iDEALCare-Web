@@ -8,6 +8,8 @@ Authentication uses the single Axios client in `src/lib/apiClient.ts`. The API b
 
 Production builds default to `https://care.api.idealsmartsolutions.com` via `.env.production`. Vite embeds this setting at build time; hosting environment variables and `.env.local` can override it, so rebuild and redeploy after changing it.
 
+For Vercel deployments, set the project root to this application so that `vercel.json` serves the React app for direct visits and refreshes on routes such as `/login`. Check that any Vercel `VITE_API_BASE_URL` override points to the production backend origin and that the backend allows the web app's origin through CORS. Redeploy after changing the configuration.
+
 The app follows the backend's one-tenant contract. Runtime context is represented by `tenant.tenant_id` and `tenant.tenant_role`, preserving the exact JWT claim names. The client uses these values for display and UX only; authorization remains server-enforced. Only the access token and expiry are persisted through `authStorage`.
 
 `ProtectedRoute` keeps protected content out of the render tree while auth is initializing or loading, redirects unauthenticated users to `/login`, and preserves the attempted location in router state. The Axios response interceptor centrally handles non-login 401 responses by clearing auth and navigating to login; 403 responses pass through unchanged.
